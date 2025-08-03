@@ -10,14 +10,21 @@ function App() {
 
   useEffect(() => {
     const initAuth = async () => {
-      const { auth } = await initializeFirebase();
-      onAuthStateChanged(auth, (user) => {
-        setUser(user);
+      try {
+        const { auth } = await initializeFirebase();
+        return onAuthStateChanged(auth, (user) => {
+          console.log('Auth state changed:', user ? `User ${user.email}` : 'No user');
+          setUser(user);
+          setLoading(false);
+        });
+      } catch (error) {
+        console.error('Auth initialization error:', error);
         setLoading(false);
-      });
+      }
     };
     
-    initAuth();
+    const unsubscribe = initAuth();
+    return () => unsubscribe;
   }, []);
 
   const handleAuthStateChange = (newUser) => {

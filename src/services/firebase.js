@@ -20,16 +20,24 @@ let auth = null;
 export const initializeFirebase = async () => {
   if (!app) {
     app = initializeApp(firebaseConfig);
-    database = getDatabase(app);
     auth = getAuth(app);
     
-    // Wait for auth state to be ready
+    // Wait for auth state to be ready before initializing database
     await new Promise((resolve) => {
       const unsubscribe = auth.onAuthStateChanged((user) => {
-        unsubscribe();
+        if (user) {
+          console.log('User authenticated:', user.email, 'UID:', user.uid);
+        } else {
+          console.log('No user authenticated');
+        }
         resolve();
       });
+      
+      // Don't unsubscribe immediately to keep listening for auth changes
+      setTimeout(() => unsubscribe(), 1000);
     });
+
+    database = getDatabase(app);
   }
   return { app, database, auth };
 };
@@ -125,13 +133,51 @@ export const loadParticipantsFromFirebase = async (userId = null) => {
     throw new Error('No user ID available');
   }
 
+  // Define default list structure
+  const defaultLists = {
+    chairmen: { name: 'Chairmen', participants: [] },
+    assignment1: { name: 'Assignment 1', participants: [] },
+    assignment2: { name: 'Assignment 2', participants: [] },
+    assignment3: { name: 'Assignment 3', participants: [] },
+    sisters: { name: 'Sisters', participants: [] },
+    twak: { name: 'Twak', participants: [] },
+    ngimawa: { name: 'Ngimawa (Elders)', participants: [] },
+    puonjruok_readers: { name: 'Puonjruok Readers', participants: [] },
+    puonjruok_muma: { name: 'Puonjruok Muma', participants: [] },
+    prayers: { name: 'Prayers (Lamo)', participants: [] }
+  };
+
   const dbRef = ref(database);
   const snapshot = await get(child(dbRef, `users/${userId}/participants`));
   
   if (snapshot.exists()) {
-    return snapshot.val();
+    const existingLists = snapshot.val();
+    // Merge existing lists with default structure to ensure all categories exist
+    return Object.keys(defaultLists).reduce((acc, key) => {
+      acc[key] = {
+        name: defaultLists[key].name,
+        participants: existingLists[key]?.participants || []
+      };
+      return acc;
+    }, {});
   } else {
-    return [];
+    // For hardcoded user, provide the full participant list
+    if (auth?.currentUser?.email === 'nyawita@test.com') {
+      return {
+        chairmen: { name: 'Chairmen', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak'] },
+        assignment1: { name: 'Assignment 1', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango'] },
+        assignment2: { name: 'Assignment 2', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango'] },
+        assignment3: { name: 'Assignment 3', participants: ['Paul Oduor', 'Roman Volkonidov', 'Wesley Omondi', 'Brian Oduor', 'Eliam Odhiambo', 'John Paul'] },
+        sisters: { name: 'Sisters', participants: ['Neriah Ochimbo', 'Ruth Otieno', 'Susan Omondi', 'Benita Ogwel', 'Pheny Achieng', 'Faith Otieno', 'Leah Omollo', 'Saffron Omollo', 'Elcie Natija', 'Irene Oyoo', 'Pendo Oyoo', 'Nyarieko Oyoo', 'Jane Oyombra', 'Millicent Anyango', 'Monique Owiti', 'Rosemary Otieno', 'Jane Gumbo', 'Josephine Otieno', 'Valine Adhiambo', 'Jacklin Otieno', 'Violet Volkonidov', 'Emma Oyugi', 'Everlin Radak', 'Grace Onyango', 'Dorcas Achieng', 'Grace Atieno', 'Consolata Were', 'Winnie Oduor', 'Michell Oduor', 'Monica Nyang\'wera', 'Helen Odwar', 'Caren Akumu', 'Lucy Anyango', 'Vinril Ngode', 'Susan Otieno', 'Everline Atieno', 'Maximilla Auma'] },
+        twak: { name: 'Twak', participants: ['Paul Oduor', 'Benedict Olweny', 'George Ochimbo'] },
+        ngimawa: { name: 'Ngimawa (Elders)', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno'] },
+        puonjruok_readers: { name: 'Puonjruok Readers', participants: ['Brian Oduor', 'Wesley Omondi', 'Paul Oduor', 'John Paul', 'Eliam Odhiambo'] },
+        puonjruok_muma: { name: 'Puonjruok Muma', participants: ['Benson Otieno', 'Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak'] },
+        prayers: { name: 'Prayers (Lamo)', participants: ['Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango', 'Benedict Olweny', 'Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Roman Volkonidov', 'Paul Oduor'] }
+      };
+    }
+    // For new users, return empty lists with all categories
+    return defaultLists;
   }
 };
 
@@ -143,7 +189,7 @@ export const signInWithEmail = async (email, password) => {
   
   try {
     let result;
-    if (email === 'nyawita@test.com' && password === 'Luo') {
+    if (email === 'nyawita@test.com' && password === 'LuoLuo') {
       // First, create user if doesn't exist
       try {
         result = await createUserWithEmailAndPassword(auth, email, password);
