@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Meeting Schedule Manager</title>
+    <style>
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        .schedule-preview, .schedule-preview * {
+          visibility: visible;
+        }
+        .schedule-preview {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          background: white !important;
+        }
+        .page-break {
+          page-break-before: always;
+        }
+        .page-break:first-child {
+          page-break-before: avoid;
+        }
+        @page {
+          margin: 1in;
+          size: letter;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

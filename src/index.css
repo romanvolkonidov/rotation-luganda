@@ -1,0 +1,457 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #f8fafc;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center gap-2;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors duration-200 flex items-center gap-2;
+  }
+  
+  .btn-success {
+    @apply px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center gap-2;
+  }
+  
+  .btn-danger {
+    @apply px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200 flex items-center gap-2;
+  }
+  
+  .input-field {
+    @apply px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md border border-gray-200;
+  }
+
+  /* Toast animation */
+  .animate-slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translate(100%, 100%);
+      opacity: 0;
+    }
+    to {
+      transform: translate(0, 0);
+      opacity: 1;
+    }
+  }
+
+  /* Edit mode item numbering - continuous across entire week */
+  .edit-mode .schedule-item-edit {
+    counter-increment: item-counter;
+  }
+  
+  .edit-mode .schedule-item-edit::before {
+    content: counter(item-counter) ". ";
+    font-weight: bold;
+    color: #666;
+    margin-right: 8px;
+    min-width: 20px;
+    display: inline-block;
+  }
+  
+  .edit-mode .card {
+    counter-reset: item-counter;
+  }
+
+  /* Dynamic width inputs for names */
+  .name-input-auto {
+    min-width: 8rem; /* w-32 equivalent */
+    max-width: 16rem; /* w-64 equivalent */
+    width: auto;
+  }
+  
+  .name-input-wide {
+    min-width: 12rem; /* w-48 equivalent */
+    max-width: 20rem; /* w-80 equivalent */
+    width: auto;
+  }
+}
+
+/* Schedule Preview Styles - Matching the HTML document exactly */
+.schedule-preview {
+  font-family: Arial, sans-serif !important;
+  font-size: 18px !important;
+  background-color: #f5f5f5 !important;
+  margin: 20px !important;
+}
+
+.schedule-preview .schedule-container,
+.schedule-preview > div {
+  background-color: white !important;
+  padding: 20px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  max-width: 800px !important;
+  margin: 0 auto !important;
+}
+
+.schedule-preview .schedule-container > *:not(.section-header):not(h2),
+.schedule-preview > div > *:not(.section-header):not(h2) {
+  margin-left: 1rem !important;
+  margin-right: 1rem !important;
+}
+
+.schedule-preview h1 {
+  color: #333 !important;
+  text-align: center !important;
+  margin-bottom: 30px !important;
+  font-size: 32px !important;
+  font-weight: bold !important;
+}
+
+.schedule-preview h2 {
+  color: #333 !important;
+  margin-top: 40px !important;
+  margin-bottom: 20px !important;
+  text-align: left !important;
+  border-top: 3px solid #ddd !important;
+  border-bottom: 1px solid #ddd !important;
+  padding-top: 30px !important;
+  padding-bottom: 10px !important;
+  font-size: 24px !important;
+  font-weight: bold !important;
+}
+
+.schedule-preview h2:first-of-type {
+  border-top: none !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+.schedule-preview .chairman {
+  font-weight: bold !important;
+  margin-bottom: 15px !important;
+}
+
+.schedule-preview .section-header {
+  color: white !important;
+  padding: 10px 15px !important;
+  margin: 20px -20px 15px -20px !important;
+  font-weight: bold !important;
+  font-size: 20px !important;
+}
+
+.schedule-preview .section-header-mwandu,
+.section-header-mwandu {
+  background-color: #555555 !important;
+}
+
+.schedule-preview .section-header-tiegri,
+.section-header-tiegri {
+  background-color: #B8860B !important;
+}
+
+.schedule-preview .section-header-ngimawa,
+.section-header-ngimawa {
+  background-color: #8B0000 !important;
+}
+
+.schedule-preview .section-header-default,
+.section-header-default {
+  background-color: #666666 !important;
+}
+
+.schedule-preview .schedule-item {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  margin-bottom: 8px !important;
+  padding: 5px 0 !important;
+}
+
+.schedule-preview .schedule-item.prayer {
+  display: block !important;
+}
+
+.schedule-preview .schedule-item.prayer .item-description {
+  display: inline !important;
+  padding-right: 5px !important;
+}
+
+.schedule-preview .schedule-item.prayer .item-name {
+  display: inline !important;
+  font-weight: bold !important;
+  text-align: left !important;
+  min-width: auto !important;
+  white-space: normal !important;
+}
+
+.schedule-preview .item-description {
+  flex: 1 !important;
+  padding-right: 20px !important;
+}
+
+.schedule-preview .item-name {
+  font-weight: bold !important;
+  text-align: right !important;
+  min-width: 200px !important;
+  white-space: nowrap !important;
+}
+
+.schedule-preview .song-prayer {
+  margin: 10px 0 !important;
+}
+
+.schedule-preview .indent {
+  margin-left: 0 !important;
+}
+
+.schedule-preview .note {
+  font-style: italic !important;
+  font-size: 14px !important;
+  color: #666 !important;
+}
+
+/* Print-specific styles */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: white !important;
+    color: black !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+  
+  .schedule-preview {
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .schedule-preview h2 {
+    page-break-before: always !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+    color: #333 !important;
+    margin-top: 20px !important;
+    margin-bottom: 15px !important;
+    text-align: left !important;
+    border-bottom: 1px solid #ddd !important;
+    padding-bottom: 8px !important;
+    font-size: 24px !important;
+    font-weight: bold !important;
+  }
+  
+  .schedule-preview h2:first-of-type {
+    page-break-before: avoid !important;
+    margin-top: 0 !important;
+  }
+  
+  .schedule-preview .schedule-container,
+  .schedule-preview > div {
+    box-shadow: none !important;
+    margin: 0 !important;
+    max-width: none !important;
+    padding: 0 !important;
+    background-color: transparent !important;
+    border-radius: 0 !important;
+  }
+  
+  .schedule-preview .schedule-container > *:not(.section-header):not(h2),
+  .schedule-preview > div > *:not(.section-header):not(h2) {
+    margin-left: 0.5rem !important;
+    margin-right: 0.5rem !important;
+  }
+  
+  .schedule-preview .section-header {
+    color: white !important;
+    margin: 15px 0 10px 0 !important;
+    padding: 8px 15px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    font-weight: bold !important;
+    font-size: 20px !important;
+    display: block !important;
+  }
+  
+  .schedule-preview .section-header-mwandu,
+  .section-header-mwandu {
+    background-color: #555555 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .schedule-preview .section-header-tiegri,
+  .section-header-tiegri {
+    background-color: #B8860B !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .schedule-preview .section-header-ngimawa,
+  .section-header-ngimawa {
+    background-color: #8B0000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .schedule-preview .chairman {
+    font-weight: bold !important;
+    margin-bottom: 15px !important;
+  }
+  
+  .schedule-preview .schedule-item {
+    display: block !important;
+    margin-bottom: 8px !important;
+    padding: 5px 0 !important;
+    overflow: hidden !important;
+  }
+  
+  .schedule-preview .schedule-item.prayer {
+    display: block !important;
+  }
+  
+  .schedule-preview .item-description {
+    display: inline-block !important;
+    width: 60% !important;
+    padding-right: 8px !important;
+    overflow: hidden !important;
+    word-wrap: break-word !important;
+    vertical-align: top !important;
+  }
+  
+  .schedule-preview .item-name {
+    display: inline-block !important;
+    width: 38% !important;
+    font-weight: bold !important;
+    text-align: right !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    word-wrap: break-word !important;
+    vertical-align: top !important;
+    line-height: 1.3 !important;
+    min-height: 1.3em !important;
+  }
+  
+  .schedule-preview .song-prayer {
+    margin: 10px 0 !important;
+  }
+  
+  /* Each week gets its own page */
+  .schedule-preview > div > div {
+    page-break-after: always !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .schedule-preview > div > div:last-child {
+    page-break-after: avoid !important;
+  }
+  
+  /* Dynamic font sizing for weeks that don't fit */
+  .schedule-preview > div > div {
+    font-size: 18px !important;
+  }
+  
+  /* Progressive font size reduction based on content density */
+  @media print {
+    /* Default font size */
+    .schedule-preview > div > div {
+      font-size: 18px !important;
+      line-height: 1.4 !important;
+    }
+    
+    /* Simpler approach - reduce font size based on estimated content */
+    .schedule-preview > div > div {
+      font-size: 16px !important;
+    }
+    
+    /* Adjust headers for better fit */
+    .schedule-preview > div > div h2 {
+      font-size: 20px !important;
+      margin-top: 15px !important;
+      margin-bottom: 10px !important;
+    }
+    
+    .schedule-preview > div > div .section-header {
+      font-size: 17px !important;
+      padding: 6px 12px !important;
+      margin: 12px 0 8px 0 !important;
+    }
+    
+    /* Tighter spacing for better fit */
+    .schedule-preview .schedule-item {
+      margin-bottom: 6px !important;
+      padding: 3px 0 !important;
+    }
+    
+    .schedule-preview .song-prayer {
+      margin: 8px 0 !important;
+    }
+    
+    /* Manual override classes for extreme cases */
+    .schedule-preview > div > div.overflow-large {
+      font-size: 13px !important;
+    }
+    
+    .schedule-preview > div > div.overflow-large h2 {
+      font-size: 17px !important;
+    }
+    
+    .schedule-preview > div > div.overflow-large .section-header {
+      font-size: 15px !important;
+    }
+    
+    /* Emergency smallest font for very large weeks */
+    .schedule-preview > div > div.overflow-extra {
+      font-size: 11px !important;
+    }
+    
+    .schedule-preview > div > div.overflow-extra h2 {
+      font-size: 15px !important;
+    }
+    
+    .schedule-preview > div > div.overflow-extra .section-header {
+      font-size: 13px !important;
+    }
+  }
+  
+  @page {
+    margin: 0.51in 0.255in 0.51in 0.255in !important;
+    size: letter;
+  }
+  
+  /* Alternative manual override classes for specific cases */
+  .schedule-preview .font-small {
+    font-size: 16px !important;
+  }
+  
+  .schedule-preview .font-smaller {
+    font-size: 14px !important;
+  }
+  
+  .schedule-preview .font-tiny {
+    font-size: 12px !important;
+  }
+}

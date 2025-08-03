@@ -1,0 +1,145 @@
+/* Assignment Slips Print Styles */
+@media print {
+  /* Hide everything except slip forms when printing */
+  body * {
+    visibility: hidden;
+  }
+  
+  .slip-form, 
+  .slip-form * {
+    visibility: visible;
+  }
+  
+  /* Position slips in a 2x2 grid on each page */
+  .slip-form {
+    position: absolute !important;
+    width: calc(50% - 8mm) !important;
+    height: calc(50% - 8mm) !important;
+    border: 1px solid #000 !important;
+    padding: 12px !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    margin: 0 !important;
+    background: white !important;
+  }
+  
+  /* First row */
+  .slip-form:nth-child(4n+1) {
+    left: 4mm !important;
+    top: 4mm !important;
+  }
+  
+  .slip-form:nth-child(4n+2) {
+    left: calc(50% + 4mm) !important;
+    top: 4mm !important;
+  }
+  
+  /* Second row */
+  .slip-form:nth-child(4n+3) {
+    left: 4mm !important;
+    top: calc(50% + 4mm) !important;
+  }
+  
+  .slip-form:nth-child(4n+4) {
+    left: calc(50% + 4mm) !important;
+    top: calc(50% + 4mm) !important;
+  }
+  
+  /* Start new page every 4 slips */
+  .slip-form:nth-child(4n+1):not(.slip-form:nth-child(-n+4)) {
+    page-break-before: always !important;
+  }
+  
+  /* Hide the modal background and buttons when printing */
+  .fixed.inset-0,
+  .no-print,
+  button,
+  .overflow-auto {
+    display: none !important;
+  }
+  
+  /* Make sure the slips container is visible */
+  .grid.grid-cols-1.md\\:grid-cols-2 {
+    display: block !important;
+    position: relative !important;
+    width: 100% !important;
+    height: 100vh !important;
+  }
+}
+
+/* Screen styles for preview */
+@media screen {
+  .slip-form {
+    min-height: 300px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .slip-form .font-bold {
+    font-weight: bold;
+  }
+  
+  .slip-form .text-center {
+    text-align: center;
+  }
+  
+  .slip-form .leading-tight {
+    line-height: 1.25;
+  }
+  
+  .slip-form .border-b {
+    border-bottom: 1px solid #000;
+    padding-bottom: 2px;
+  }
+}
+/* Print styles for slips */
+@media print {
+  /* Hide everything when printing slips */
+  body.printing-slips > *:not(.print-slips-container) {
+    display: none !important;
+  }
+  
+  /* Show only the print container */
+  .print-slips-container {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .slips-print-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5in !important;
+    padding: 0.5in !important;
+  }
+  
+  .slip-form-print {
+    width: 3.5in !important;
+    height: 4.5in !important;
+    padding: 0.25in !important;
+    border: 1px solid #000 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    box-sizing: border-box !important;
+    background: white !important;
+    color: black !important;
+  }
+  
+  /* Force black text for all slip content */
+  .slip-form-print * {
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Page setup */
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+}
+
+/* Regular styles for slips modal */
