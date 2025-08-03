@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle } from '../services/firebase';
-import './slips.css';
+import './auth.css';
 
 const AuthForm = ({ onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
