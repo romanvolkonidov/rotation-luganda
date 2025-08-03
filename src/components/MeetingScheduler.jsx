@@ -5,7 +5,7 @@ import { parseEpubFile } from '../services/epubParser';
 import { AlertModal, ConfirmModal, PromptModal, Toast } from './Modal';
 import './slips.css';
 
-const MeetingScheduler = () => {
+const MeetingScheduler = ({ userId }) => {
   // State management
   const [weeks, setWeeks] = useState([]);
   const [participantLists, setParticipantLists] = useState({
