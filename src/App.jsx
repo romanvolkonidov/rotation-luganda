@@ -1,34 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import MeetingScheduler from './components/MeetingScheduler';
-import AuthForm from './components/AuthForm';
-import { initializeFirebase } from './services/firebase';
+import React from 'react'
+import MeetingScheduler from './components/MeetingScheduler'
 
 function App() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const init = async () => {
-      const { auth } = await initializeFirebase();
-      auth.onAuthStateChanged((user) => {
-        setUser(user);
-      });
-    };
-    init();
-  }, []);
-
-  const handleAuthSuccess = (user) => {
-    setUser(user);
-  };
-
   return (
     <div className="App">
-      {user ? (
-        <MeetingScheduler userId={user.uid} />
-      ) : (
-        <AuthForm onAuthSuccess={handleAuthSuccess} />
-      )}
+      <MeetingScheduler />
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
