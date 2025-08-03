@@ -22,6 +22,14 @@ export const initializeFirebase = async () => {
     app = initializeApp(firebaseConfig);
     database = getDatabase(app);
     auth = getAuth(app);
+    
+    // Wait for auth state to be ready
+    await new Promise((resolve) => {
+      const unsubscribe = auth.onAuthStateChanged((user) => {
+        unsubscribe();
+        resolve();
+      });
+    });
   }
   return { app, database, auth };
 };
@@ -133,13 +141,23 @@ export const signInWithEmail = async (email, password) => {
     await initializeFirebase();
   }
   
-  if (email === 'nyawita@test.com' && password === 'Luo') {
-    // Hardcoded user for testing
-    return { user: { email: 'nyawita@test.com', uid: 'hardcoded-user' } };
-  }
-  
   try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
+    let result;
+    if (email === 'nyawita@test.com' && password === 'Luo') {
+      // First, create user if doesn't exist
+      try {
+        result = await createUserWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        if (error.code === 'auth/email-already-in-use') {
+          // If user exists, sign in
+          result = await signInWithEmailAndPassword(auth, email, password);
+        } else {
+          throw error;
+        }
+      }
+    } else {
+      result = await signInWithEmailAndPassword(auth, email, password);
+    }
     return result;
   } catch (error) {
     throw error;

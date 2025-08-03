@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronRight, Plus, Trash2, Save, Printer, Eye, Edit2, Users, Calendar, RotateCw, X, Check, Upload, History, Clock } from 'lucide-react';
-import { initializeFirebase, saveScheduleToFirebase, loadScheduleFromFirebase } from '../services/firebase';
+import { 
+  initializeFirebase, 
+  saveScheduleToFirebase, 
+  loadScheduleFromFirebase,
+  saveParticipantsToFirebase,
+  loadParticipantsFromFirebase 
+} from '../services/firebase';
 import { parseEpubFile } from '../services/epubParser';
 import { AlertModal, ConfirmModal, PromptModal, Toast } from './Modal';
 import './slips.css';
@@ -8,18 +14,7 @@ import './slips.css';
 const MeetingScheduler = () => {
   // State management
   const [weeks, setWeeks] = useState([]);
-  const [participantLists, setParticipantLists] = useState({
-    chairmen: { name: 'Chairmen', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak'] },
-    assignment1: { name: 'Assignment 1', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango'] },
-    assignment2: { name: 'Assignment 2', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango'] },
-    assignment3: { name: 'Assignment 3', participants: ['Paul Oduor', 'Roman Volkonidov', 'Wesley Omondi', 'Brian Oduor', 'Eliam Odhiambo', 'John Paul'] },
-    sisters: { name: 'Sisters', participants: ['Neriah Ochimbo', 'Ruth Otieno', 'Susan Omondi', 'Benita Ogwel', 'Pheny Achieng', 'Faith Otieno', 'Leah Omollo', 'Saffron Omollo', 'Elcie Natija', 'Irene Oyoo', 'Pendo Oyoo', 'Nyarieko Oyoo', 'Jane Oyombra', 'Millicent Anyango', 'Monique Owiti', 'Rosemary Otieno', 'Jane Gumbo', 'Josephine Otieno', 'Valine Adhiambo', 'Jacklin Otieno', 'Violet Volkonidov', 'Emma Oyugi', 'Everlin Radak', 'Grace Onyango', 'Dorcas Achieng', 'Grace Atieno', 'Consolata Were', 'Winnie Oduor', 'Michell Oduor', 'Monica Nyang\'wera', 'Helen Odwar', 'Caren Akumu', 'Lucy Anyango', 'Vinril Ngode', 'Susan Otieno', 'Everline Atieno', 'Maximilla Auma'] },
-    twak: { name: 'Twak', participants: ['Paul Oduor', 'Benedict Olweny', 'George Ochimbo'] },
-    ngimawa: { name: 'Ngimawa (Elders)', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno'] },
-    puonjruok_readers: { name: 'Puonjruok Readers', participants: ['Brian Oduor', 'Wesley Omondi', 'Paul Oduor', 'John Paul', 'Eliam Odhiambo'] },
-    puonjruok_muma: { name: 'Puonjruok Muma', participants: ['Benson Otieno', 'Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak'] },
-    prayers: { name: 'Prayers (Lamo)', participants: ['Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango', 'Benedict Olweny', 'Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Roman Volkonidov', 'Paul Oduor'] }
-  });
+  const [participantLists, setParticipantLists] = useState({});
   const [previousAssignments, setPreviousAssignments] = useState([]);
   const [scheduleHistory, setScheduleHistory] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
@@ -58,19 +53,48 @@ useEffect(() => {
   const initData = async () => {
     try {
       await initializeFirebase();
-      const data = await loadScheduleFromFirebase();
+      const scheduleData = await loadScheduleFromFirebase();
+      const participantsData = await loadParticipantsFromFirebase();
       
-      // Load participant lists, previous assignments, schedule history, and rotation indices,
-      // but start with an empty schedule (don't load saved weeks)
-      if (data) {
-        if (data.participantLists) setParticipantLists(data.participantLists);
-        if (data.previousAssignments) setPreviousAssignments(data.previousAssignments);
-        if (data.scheduleHistory) setScheduleHistory(data.scheduleHistory);
-        if (data.rotationIndices) setRotationIndices(data.rotationIndices);
-        // Note: We intentionally don't load data.weeks to start with an empty schedule
+      // For hardcoded user (nyawita@test.com), set default lists if none exist
+      if (!participantsData || Object.keys(participantsData).length === 0) {
+        const defaultLists = {
+          chairmen: { name: 'Chairmen', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak'] },
+          assignment1: { name: 'Assignment 1', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango'] },
+          assignment2: { name: 'Assignment 2', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango'] },
+          assignment3: { name: 'Assignment 3', participants: ['Paul Oduor', 'Roman Volkonidov', 'Wesley Omondi', 'Brian Oduor', 'Eliam Odhiambo', 'John Paul'] },
+          sisters: { name: 'Sisters', participants: ['Neriah Ochimbo', 'Ruth Otieno', 'Susan Omondi', 'Benita Ogwel', 'Pheny Achieng', 'Faith Otieno', 'Leah Omollo', 'Saffron Omollo', 'Elcie Natija', 'Irene Oyoo', 'Pendo Oyoo', 'Nyarieko Oyoo', 'Jane Oyombra', 'Millicent Anyango', 'Monique Owiti', 'Rosemary Otieno', 'Jane Gumbo', 'Josephine Otieno', 'Valine Adhiambo', 'Jacklin Otieno', 'Violet Volkonidov', 'Emma Oyugi', 'Everlin Radak', 'Grace Onyango', 'Dorcas Achieng', 'Grace Atieno', 'Consolata Were', 'Winnie Oduor', 'Michell Oduor', 'Monica Nyang\'wera', 'Helen Odwar', 'Caren Akumu', 'Lucy Anyango', 'Vinril Ngode', 'Susan Otieno', 'Everline Atieno', 'Maximilla Auma'] },
+          twak: { name: 'Twak', participants: ['Paul Oduor', 'Benedict Olweny', 'George Ochimbo'] },
+          ngimawa: { name: 'Ngimawa (Elders)', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno'] },
+          puonjruok_readers: { name: 'Puonjruok Readers', participants: ['Brian Oduor', 'Wesley Omondi', 'Paul Oduor', 'John Paul', 'Eliam Odhiambo'] },
+          puonjruok_muma: { name: 'Puonjruok Muma', participants: ['Benson Otieno', 'Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak'] },
+          prayers: { name: 'Prayers (Lamo)', participants: ['Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango', 'Benedict Olweny', 'Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Roman Volkonidov', 'Paul Oduor'] }
+        };
+        
+        if (auth?.currentUser?.email === 'nyawita@test.com') {
+          setParticipantLists(defaultLists);
+          await saveParticipantsToFirebase(defaultLists);
+        } else {
+          // For new users, start with empty lists but same structure
+          const emptyLists = Object.keys(defaultLists).reduce((acc, key) => {
+            acc[key] = { name: defaultLists[key].name, participants: [] };
+            return acc;
+          }, {});
+          setParticipantLists(emptyLists);
+          await saveParticipantsToFirebase(emptyLists);
+        }
+      } else {
+        setParticipantLists(participantsData);
+      }
+      
+      if (scheduleData) {
+        if (scheduleData.previousAssignments) setPreviousAssignments(scheduleData.previousAssignments);
+        if (scheduleData.scheduleHistory) setScheduleHistory(scheduleData.scheduleHistory);
+        if (scheduleData.rotationIndices) setRotationIndices(scheduleData.rotationIndices);
       }
     } catch (error) {
       console.error('Error loading data:', error);
+      showAlert('Error loading data: ' + error.message, 'error');
     } finally {
       setLoading(false);
     }
@@ -99,6 +123,19 @@ const showToast = (message, type = 'info') => {
 const closeAlert = () => setAlertModal({ ...alertModal, isOpen: false });
 const closeConfirm = () => setConfirmModal({ ...confirmModal, isOpen: false });
 const closePrompt = () => setPromptModal({ ...promptModal, isOpen: false });
+
+const saveParticipantListsToFirebase = async (lists) => {
+  setSavingLists(true);
+  try {
+    await saveParticipantsToFirebase(lists);
+    showToast('Participant lists saved successfully', 'success');
+  } catch (error) {
+    console.error('Error saving participant lists:', error);
+    showAlert('Error saving participant lists: ' + error.message, 'error');
+  } finally {
+    setSavingLists(false);
+  }
+};
 const closeToast = () => setToast({ ...toast, isVisible: false });
 
 // Enhanced saveToDatabase function to create historical records:
