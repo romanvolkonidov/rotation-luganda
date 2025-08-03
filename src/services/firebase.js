@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, get, child } from 'firebase/database';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 
 // Firebase config
 const firebaseConfig = {
@@ -14,13 +15,15 @@ const firebaseConfig = {
 
 let app = null;
 let database = null;
+let auth = null;
 
 export const initializeFirebase = async () => {
   if (!app) {
     app = initializeApp(firebaseConfig);
     database = getDatabase(app);
+    auth = getAuth(app);
   }
-  return { app, database };
+  return { app, database, auth };
 };
 
 export const saveScheduleToFirebase = async (data) => {
@@ -44,5 +47,60 @@ export const loadScheduleFromFirebase = async () => {
     return snapshot.val();
   } else {
     return null;
+  }
+};
+
+// Authentication functions
+export const signInWithEmail = async (email, password) => {
+  if (!auth) {
+    await initializeFirebase();
+  }
+  
+  if (email === 'Nyawita' && password === 'Luo') {
+    // Hardcoded user for testing
+    return { user: { email: 'Nyawita', uid: 'hardcoded-user' } };
+  }
+  
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const signUpWithEmail = async (email, password) => {
+  if (!auth) {
+    await initializeFirebase();
+  }
+  try {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const signInWithGoogle = async () => {
+  if (!auth) {
+    await initializeFirebase();
+  }
+  const provider = new GoogleAuthProvider();
+  try {
+    const result = await signInWithPopup(auth, provider);
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const signOutUser = async () => {
+  if (!auth) {
+    await initializeFirebase();
+  }
+  try {
+    await signOut(auth);
+  } catch (error) {
+    throw error;
   }
 };
