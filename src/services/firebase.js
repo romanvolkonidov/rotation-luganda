@@ -56,9 +56,9 @@ export const signInWithEmail = async (email, password) => {
     await initializeFirebase();
   }
   
-  if (email === 'Nyawita' && password === 'Luo') {
+  if (email === 'nyawita@test.com' && password === 'Luo') {
     // Hardcoded user for testing
-    return { user: { email: 'Nyawita', uid: 'hardcoded-user' } };
+    return { user: { email: 'nyawita@test.com', uid: 'hardcoded-user' } };
   }
   
   try {
