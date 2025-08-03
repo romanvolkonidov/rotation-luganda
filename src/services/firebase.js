@@ -43,52 +43,58 @@ export const initializeFirebase = async () => {
 };
 
 export const saveScheduleToFirebase = async (data, userId = null) => {
-  if (!database) {
-    await initializeFirebase();
-  }
-  
-  if (!userId && auth?.currentUser) {
-    userId = auth.currentUser.uid;
-  }
+  try {
+    if (!database) {
+      await initializeFirebase();
+    }
 
-  // For hardcoded user
-  if (auth?.currentUser?.email === 'nyawita@test.com') {
-    userId = 'hardcoded-user';
-  }
+    // Get current user ID or use provided ID
+    let currentUserId = userId;
+    if (!currentUserId) {
+      if (!auth?.currentUser) {
+        throw new Error('No user is authenticated');
+      }
+      currentUserId = auth.currentUser.email === 'nyawita@test.com' ? 'hardcoded-user' : auth.currentUser.uid;
+    }
 
-  if (!userId) {
-    throw new Error('No user ID available');
+    console.log('Saving schedule for user:', currentUserId);
+    const scheduleRef = ref(database, `users/${currentUserId}/meetingSchedule`);
+    await set(scheduleRef, data);
+  } catch (error) {
+    console.error('Error saving schedule:', error);
+    throw error;
   }
-
-  const scheduleRef = ref(database, `users/${userId}/meetingSchedule`);
-  await set(scheduleRef, data);
 };
 
 export const loadScheduleFromFirebase = async (userId = null) => {
-  if (!database) {
-    await initializeFirebase();
-  }
+  try {
+    if (!database) {
+      await initializeFirebase();
+    }
 
-  if (!userId && auth?.currentUser) {
-    userId = auth.currentUser.uid;
-  }
+    // Get current user ID or use provided ID
+    let currentUserId = userId;
+    if (!currentUserId) {
+      if (!auth?.currentUser) {
+        console.error('No user is authenticated');
+        return null;
+      }
+      currentUserId = auth.currentUser.email === 'nyawita@test.com' ? 'hardcoded-user' : auth.currentUser.uid;
+    }
 
-  // For hardcoded user
-  if (auth?.currentUser?.email === 'nyawita@test.com') {
-    userId = 'hardcoded-user';
-  }
-
-  if (!userId) {
-    throw new Error('No user ID available');
-  }
-
-  const dbRef = ref(database);
-  const snapshot = await get(child(dbRef, `users/${userId}/meetingSchedule`));
-  
-  if (snapshot.exists()) {
-    return snapshot.val();
-  } else {
-    return null;
+    console.log('Loading schedule for user:', currentUserId);
+    const dbRef = ref(database);
+    const snapshot = await get(child(dbRef, `users/${currentUserId}/meetingSchedule`));
+    
+    if (snapshot.exists()) {
+      return snapshot.val();
+    } else {
+      console.log('No schedule found for user:', currentUserId);
+      return null;
+    }
+  } catch (error) {
+    console.error('Error loading schedule:', error);
+    throw error;
   }
 };
 
@@ -116,22 +122,22 @@ export const saveParticipantsToFirebase = async (participants, userId = null) =>
 };
 
 export const loadParticipantsFromFirebase = async (userId = null) => {
-  if (!database) {
-    await initializeFirebase();
-  }
+  try {
+    if (!database) {
+      await initializeFirebase();
+    }
 
-  if (!userId && auth?.currentUser) {
-    userId = auth.currentUser.uid;
-  }
+    // Get current user ID or use provided ID
+    let currentUserId = userId;
+    if (!currentUserId) {
+      if (!auth?.currentUser) {
+        console.error('No user is authenticated');
+        return null;
+      }
+      currentUserId = auth.currentUser.email === 'nyawita@test.com' ? 'hardcoded-user' : auth.currentUser.uid;
+    }
 
-  // For hardcoded user
-  if (auth?.currentUser?.email === 'nyawita@test.com') {
-    userId = 'hardcoded-user';
-  }
-
-  if (!userId) {
-    throw new Error('No user ID available');
-  }
+    console.log('Loading participants for user:', currentUserId);
 
   // Define default list structure
   const defaultLists = {
