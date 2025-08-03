@@ -26,27 +26,104 @@ export const initializeFirebase = async () => {
   return { app, database, auth };
 };
 
-export const saveScheduleToFirebase = async (data) => {
+export const saveScheduleToFirebase = async (data, userId = null) => {
   if (!database) {
     await initializeFirebase();
   }
   
-  const scheduleRef = ref(database, 'meetingSchedule');
+  if (!userId && auth?.currentUser) {
+    userId = auth.currentUser.uid;
+  }
+
+  // For hardcoded user
+  if (auth?.currentUser?.email === 'nyawita@test.com') {
+    userId = 'hardcoded-user';
+  }
+
+  if (!userId) {
+    throw new Error('No user ID available');
+  }
+
+  const scheduleRef = ref(database, `users/${userId}/meetingSchedule`);
   await set(scheduleRef, data);
 };
 
-export const loadScheduleFromFirebase = async () => {
+export const loadScheduleFromFirebase = async (userId = null) => {
   if (!database) {
     await initializeFirebase();
   }
-  
+
+  if (!userId && auth?.currentUser) {
+    userId = auth.currentUser.uid;
+  }
+
+  // For hardcoded user
+  if (auth?.currentUser?.email === 'nyawita@test.com') {
+    userId = 'hardcoded-user';
+  }
+
+  if (!userId) {
+    throw new Error('No user ID available');
+  }
+
   const dbRef = ref(database);
-  const snapshot = await get(child(dbRef, 'meetingSchedule'));
+  const snapshot = await get(child(dbRef, `users/${userId}/meetingSchedule`));
   
   if (snapshot.exists()) {
     return snapshot.val();
   } else {
     return null;
+  }
+};
+
+// New functions for managing participant lists
+export const saveParticipantsToFirebase = async (participants, userId = null) => {
+  if (!database) {
+    await initializeFirebase();
+  }
+
+  if (!userId && auth?.currentUser) {
+    userId = auth.currentUser.uid;
+  }
+
+  // For hardcoded user
+  if (auth?.currentUser?.email === 'nyawita@test.com') {
+    userId = 'hardcoded-user';
+  }
+
+  if (!userId) {
+    throw new Error('No user ID available');
+  }
+
+  const participantsRef = ref(database, `users/${userId}/participants`);
+  await set(participantsRef, participants);
+};
+
+export const loadParticipantsFromFirebase = async (userId = null) => {
+  if (!database) {
+    await initializeFirebase();
+  }
+
+  if (!userId && auth?.currentUser) {
+    userId = auth.currentUser.uid;
+  }
+
+  // For hardcoded user
+  if (auth?.currentUser?.email === 'nyawita@test.com') {
+    userId = 'hardcoded-user';
+  }
+
+  if (!userId) {
+    throw new Error('No user ID available');
+  }
+
+  const dbRef = ref(database);
+  const snapshot = await get(child(dbRef, `users/${userId}/participants`));
+  
+  if (snapshot.exists()) {
+    return snapshot.val();
+  } else {
+    return [];
   }
 };
 
