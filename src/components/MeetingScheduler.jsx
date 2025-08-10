@@ -350,20 +350,9 @@ const performRotation = () => {
 
   console.log('✅ All participant data loaded from Firebase - proceeding with auto-assign');
 
-  // Check if any assignments already exist
-  const hasExistingAssignments = weeks.some(week => {
-    return week.chairman || week.openingPrayer || week.closingPrayer ||
-           week.sections.some(section => 
-             section.items.some(item => item.assignedName || item.assignedSecondary)
-           );
-  });
-
-  const confirmMessage = hasExistingAssignments 
-    ? 'Auto-assign will replace existing assignments with new ones based on fair rotation. This action cannot be undone. Do you want to continue?'
-    : 'Auto-assign will automatically assign participants to all roles based on fair rotation principles. Do you want to continue?';
-
+  // Always allow auto-assign - it will replace existing assignments with new ones
   showConfirm(
-    confirmMessage,
+    'Auto-assign will assign participants to all roles based on fair rotation. Any existing assignments will be replaced. Do you want to continue?',
     (confirmed) => {
       if (!confirmed) return;
       
@@ -374,7 +363,7 @@ const performRotation = () => {
       executeRotation();
     },
     'Auto-Assign Participants',
-    hasExistingAssignments ? 'warning' : 'info'
+    'info'
   );
 };
 
@@ -3981,9 +3970,16 @@ const printSlips = () => {
 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-sm">
   <div className="flex gap-2 items-center">
     <label className="font-medium">Chairman:</label>
-    <span className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded text-gray-800">
-      {week.chairman || 'Not assigned'}
-    </span>
+    <select
+      value={week.chairman || ''}
+      onChange={(e) => updateWeek(week.id, 'chairman', e.target.value)}
+      className="flex-1 input-field"
+    >
+      <option value="">Select...</option>
+      {participantLists.chairmen?.participants.map(name => (
+        <option key={name} value={name}>{name}</option>
+      ))}
+    </select>
   </div>
   <div className="flex gap-2 items-center">
     <label className="font-medium">Opening Song:</label>
