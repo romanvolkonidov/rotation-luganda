@@ -1076,7 +1076,16 @@ const executeRotation = () => {
           const name = list[currentIndex % list.length];
           
           // Check if this person is already assigned this week
-          let canAssign = !weekAssignments[name];
+          // SPECIAL CASE: Prayers can be a second assignment
+          let canAssign;
+          if (assignment.type === 'opening_prayer' || assignment.type === 'closing_prayer') {
+            // Prayers can be assigned to someone who already has one assignment
+            canAssign = true; // Always allow prayers (other constraints checked below)
+            console.log(`🙏 Prayer assignment allowed for ${name} (prayers can be second assignments)`);
+          } else {
+            // All other assignments follow standard "one per week" rule
+            canAssign = !weekAssignments[name];
+          }
           
           // Check for additional constraints
           if (canAssign && assignment.needsDifferentFrom) {
