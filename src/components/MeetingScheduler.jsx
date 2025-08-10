@@ -6,9 +6,8 @@ import { AlertModal, ConfirmModal, PromptModal, Toast } from './Modal';
 import './slips.css';
 
 const MeetingScheduler = () => {
-  // State management
-  const [weeks, setWeeks] = useState([]);
-  const [participantLists, setParticipantLists] = useState({
+  // Default participant lists - only used for initial setup if no data exists in Firebase
+  const getDefaultParticipantLists = () => ({
     chairmen: { name: 'Chairmen', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak'] },
     assignment1: { name: 'Assignment 1', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango'] },
     assignment2: { name: 'Assignment 2', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango'] },
@@ -20,6 +19,10 @@ const MeetingScheduler = () => {
     puonjruok_muma: { name: 'Puonjruok Muma', participants: ['Benson Otieno', 'Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak'] },
     prayers: { name: 'Prayers (Lamo)', participants: ['Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango', 'Benedict Olweny', 'Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Roman Volkonidov', 'Paul Oduor'] }
   });
+
+  // State management
+  const [weeks, setWeeks] = useState([]);
+  const [participantLists, setParticipantLists] = useState(null); // Start with null to detect if we need to load data
   const [previousAssignments, setPreviousAssignments] = useState([]);
   const [scheduleHistory, setScheduleHistory] = useState([]);
   const [showPreview, setShowPreview] = useState(false);
@@ -62,8 +65,35 @@ useEffect(() => {
       
       // Load participant lists, previous assignments, schedule history, and rotation indices,
       // but start with an empty schedule (don't load saved weeks)
+      if (data && data.participantLists) {
+        // Use saved participant lists (your customized lists)
+        console.log('Loading customized participant lists from Firebase');
+        setParticipantLists(data.participantLists);
+      } else {
+        // Only use default lists if no data exists at all (first-time setup)
+        console.log('No participant lists found in Firebase - using default lists for first-time setup');
+        const defaultLists = getDefaultParticipantLists();
+        setParticipantLists(defaultLists);
+        
+        // Save the default lists to Firebase immediately so they become the baseline
+        try {
+          const initialData = {
+            weeks: [],
+            participantLists: defaultLists,
+            previousAssignments: [],
+            scheduleHistory: [],
+            rotationIndices: {},
+            savedAt: new Date().toISOString()
+          };
+          await saveScheduleToFirebase(initialData);
+          console.log('Default participant lists saved to Firebase as baseline');
+        } catch (saveError) {
+          console.error('Error saving initial participant lists:', saveError);
+        }
+      }
+      
+      // Load other data if available
       if (data) {
-        if (data.participantLists) setParticipantLists(data.participantLists);
         if (data.previousAssignments) setPreviousAssignments(data.previousAssignments);
         if (data.scheduleHistory) setScheduleHistory(data.scheduleHistory);
         if (data.rotationIndices) setRotationIndices(data.rotationIndices);
@@ -71,6 +101,12 @@ useEffect(() => {
       }
     } catch (error) {
       console.error('Error loading data:', error);
+      // If there's an error loading from Firebase, use default lists as fallback
+      // but only if participantLists is still null (meaning we haven't loaded anything)
+      if (!participantLists) {
+        console.log('Firebase error - using default lists as fallback');
+        setParticipantLists(getDefaultParticipantLists());
+      }
     } finally {
       setLoading(false);
     }
@@ -255,6 +291,12 @@ const performRotation = () => {
     return;
   }
 
+  // Safety check: Don't proceed if participant lists aren't loaded yet
+  if (!participantLists || Object.keys(participantLists).length === 0) {
+    showAlert('Participant lists are still loading. Please wait and try again.', 'warning');
+    return;
+  }
+
   // Check if any assignments already exist
   const hasExistingAssignments = weeks.some(week => {
     return week.chairman || week.openingPrayer || week.closingPrayer ||
@@ -285,6 +327,12 @@ const performRotation = () => {
 
 // Extracted the actual rotation logic into a separate function
 const executeRotation = () => {
+  // Safety check: Don't proceed if participant lists aren't loaded yet
+  if (!participantLists || Object.keys(participantLists).length === 0) {
+    showAlert('Participant lists are still loading. Please wait and try again.', 'warning');
+    return;
+  }
+
   // First, fix any existing sister assignments
   fixSisterAssignments();
   
@@ -599,7 +647,12 @@ const executeRotation = () => {
     priorityAssignments.forEach(assignment => {
       if (assignment.isDouble) {
         // Handle sister pairs with simple rotation
-        const list = participantLists[assignment.listKey].participants;
+        const listData = participantLists[assignment.listKey];
+        if (!listData || !listData.participants) {
+          console.warn(`⚠️ Participant list '${assignment.listKey}' not found or empty, skipping assignment`);
+          return;
+        }
+        const list = listData.participants;
         console.log(`\n🎯 Assigning sisters for Week ${weekIndex + 1}, TIEGRI item: "${assignment.item.title}"`);
         
         let student = null;
@@ -939,7 +992,12 @@ const executeRotation = () => {
         }
       } else {
         // Handle single assignments with historical consideration
-        const list = participantLists[assignment.listKey].participants;
+        const listData = participantLists[assignment.listKey];
+        if (!listData || !listData.participants) {
+          console.warn(`⚠️ Participant list '${assignment.listKey}' not found or empty, skipping assignment`);
+          return;
+        }
+        const list = listData.participants;
         let assigned = false;
         let attempts = 0;
         const maxAttempts = list.length;
@@ -3384,6 +3442,15 @@ const printSlips = () => {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-xl">Processing PDF with AI... Please wait...</div>
+      </div>
+    );
+  }
+
+  // Show loading spinner while participant lists are being loaded
+  if (loading || !participantLists) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-xl">Loading participant data... Please wait...</div>
       </div>
     );
   }
