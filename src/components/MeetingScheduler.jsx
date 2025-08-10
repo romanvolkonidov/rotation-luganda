@@ -6,19 +6,7 @@ import { AlertModal, ConfirmModal, PromptModal, Toast } from './Modal';
 import './slips.css';
 
 const MeetingScheduler = () => {
-  // Default participant lists - only used for initial setup if no data exists in Firebase
-  const getDefaultParticipantLists = () => ({
-    chairmen: { name: 'Chairmen', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak'] },
-    assignment1: { name: 'Assignment 1', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango'] },
-    assignment2: { name: 'Assignment 2', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango'] },
-    assignment3: { name: 'Assignment 3', participants: ['Paul Oduor', 'Roman Volkonidov', 'Wesley Omondi', 'Brian Oduor', 'Eliam Odhiambo', 'John Paul'] },
-    sisters: { name: 'Sisters', participants: ['Neriah Ochimbo', 'Ruth Otieno', 'Susan Omondi', 'Benita Ogwel', 'Pheny Achieng', 'Faith Otieno', 'Leah Omollo', 'Saffron Omollo', 'Elcie Natija', 'Irene Oyoo', 'Pendo Oyoo', 'Nyarieko Oyoo', 'Jane Oyombra', 'Millicent Anyango', 'Monique Owiti', 'Rosemary Otieno', 'Jane Gumbo', 'Josephine Otieno', 'Valine Adhiambo', 'Jacklin Otieno', 'Violet Volkonidov', 'Emma Oyugi', 'Everlin Radak', 'Grace Onyango', 'Dorcas Achieng', 'Grace Atieno', 'Consolata Were', 'Winnie Oduor', 'Michell Oduor', 'Monica Nyang\'wera', 'Helen Odwar', 'Caren Akumu', 'Lucy Anyango', 'Vinril Ngode', 'Susan Otieno', 'Everline Atieno', 'Maximilla Auma'] },
-    twak: { name: 'Twak', participants: ['Paul Oduor', 'Benedict Olweny', 'George Ochimbo'] },
-    ngimawa: { name: 'Ngimawa (Elders)', participants: ['Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno'] },
-    puonjruok_readers: { name: 'Puonjruok Readers', participants: ['Brian Oduor', 'Wesley Omondi', 'Paul Oduor', 'John Paul', 'Eliam Odhiambo'] },
-    puonjruok_muma: { name: 'Puonjruok Muma', participants: ['Benson Otieno', 'Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak'] },
-    prayers: { name: 'Prayers (Lamo)', participants: ['Steve Ouma', 'Cosmas Were', 'Austin Ngode', 'Caleb Onyango', 'Benedict Olweny', 'Tom Oyoo', 'Pius Omondi', 'James Otieno', 'George Radak', 'Benson Otieno', 'Roman Volkonidov', 'Paul Oduor'] }
-  });
+  // No more hardcoded participant lists - everything comes from Firebase
 
   // State management
   const [weeks, setWeeks] = useState([]);
@@ -63,50 +51,42 @@ useEffect(() => {
       await initializeFirebase();
       const data = await loadScheduleFromFirebase();
       
-      // Load participant lists, previous assignments, schedule history, and rotation indices,
-      // but start with an empty schedule (don't load saved weeks)
+      // Only load from Firebase - no more fallback to hardcoded data
       if (data && data.participantLists) {
-        // Use saved participant lists (your customized lists)
-        console.log('Loading customized participant lists from Firebase');
+        console.log('✅ Loading participant lists from Firebase');
         setParticipantLists(data.participantLists);
-      } else {
-        // Only use default lists if no data exists at all (first-time setup)
-        console.log('No participant lists found in Firebase - using default lists for first-time setup');
-        const defaultLists = getDefaultParticipantLists();
-        setParticipantLists(defaultLists);
         
-        // Save the default lists to Firebase immediately so they become the baseline
-        try {
-          const initialData = {
-            weeks: [],
-            participantLists: defaultLists,
-            previousAssignments: [],
-            scheduleHistory: [],
-            rotationIndices: {},
-            savedAt: new Date().toISOString()
-          };
-          await saveScheduleToFirebase(initialData);
-          console.log('Default participant lists saved to Firebase as baseline');
-        } catch (saveError) {
-          console.error('Error saving initial participant lists:', saveError);
-        }
-      }
-      
-      // Load other data if available
-      if (data) {
+        // Load other data if available
         if (data.previousAssignments) setPreviousAssignments(data.previousAssignments);
         if (data.scheduleHistory) setScheduleHistory(data.scheduleHistory);
         if (data.rotationIndices) setRotationIndices(data.rotationIndices);
         // Note: We intentionally don't load data.weeks to start with an empty schedule
+      } else {
+        // No data in Firebase - show error and instructions
+        console.error('❌ No participant lists found in Firebase');
+        setParticipantLists(null);
+        
+        // Show error message to user
+        setTimeout(() => {
+          showAlert(
+            'No participant data found in Firebase. Please contact the administrator to set up the initial participant lists.',
+            'error',
+            'No Data Found'
+          );
+        }, 1000);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
-      // If there's an error loading from Firebase, use default lists as fallback
-      // but only if participantLists is still null (meaning we haven't loaded anything)
-      if (!participantLists) {
-        console.log('Firebase error - using default lists as fallback');
-        setParticipantLists(getDefaultParticipantLists());
-      }
+      console.error('❌ Error loading data from Firebase:', error);
+      setParticipantLists(null);
+      
+      // Show Firebase connection error
+      setTimeout(() => {
+        showAlert(
+          `Error connecting to Firebase: ${error.message}. Please check your internet connection and try again.`,
+          'error',
+          'Firebase Connection Error'
+        );
+      }, 1000);
     } finally {
       setLoading(false);
     }
@@ -136,6 +116,60 @@ const closeAlert = () => setAlertModal({ ...alertModal, isOpen: false });
 const closeConfirm = () => setConfirmModal({ ...confirmModal, isOpen: false });
 const closePrompt = () => setPromptModal({ ...promptModal, isOpen: false });
 const closeToast = () => setToast({ ...toast, isVisible: false });
+
+// Test function to verify Firebase participant data (no more hardcoded references)
+const testFirebaseParticipantCounts = () => {
+  console.log('\n=== FIREBASE PARTICIPANT DATA TEST (Firebase-Only Mode) ===');
+  
+  if (!participantLists) {
+    console.error('❌ No participant lists loaded from Firebase');
+    console.log('💡 This app now relies entirely on Firebase data - no hardcoded fallbacks');
+    return;
+  }
+
+  console.log('✅ Successfully loaded participant lists from Firebase');
+  console.log('🗂️ Available participant lists:');
+  
+  // Show all available lists from Firebase
+  Object.entries(participantLists).forEach(([key, list]) => {
+    console.log(`📋 ${list.name}: ${list.participants.length} participants`);
+  });
+
+  // Show essential lists for auto-assign
+  const essentialLists = ['chairmen', 'sisters', 'prayers'];
+  console.log('\n🔑 Essential lists for auto-assign:');
+  
+  let allEssentialPresent = true;
+  essentialLists.forEach(listKey => {
+    const list = participantLists[listKey];
+    if (list && list.participants && list.participants.length > 0) {
+      console.log(`✅ ${list.name}: ${list.participants.length} participants`);
+    } else {
+      console.error(`❌ ${listKey}: Missing or empty`);
+      allEssentialPresent = false;
+    }
+  });
+
+  if (allEssentialPresent) {
+    console.log('\n🎉 ALL ESSENTIAL LISTS PRESENT - Auto-assign should work correctly!');
+  } else {
+    console.log('\n⚠️ Some essential lists are missing - Auto-assign may not work properly');
+  }
+
+  // Show detailed breakdown
+  console.log('\n=== DETAILED PARTICIPANT LISTS FROM FIREBASE ===');
+  Object.entries(participantLists).forEach(([key, list]) => {
+    console.log(`\n📋 ${list.name} (${list.participants.length}):`);
+    list.participants.forEach((participant, index) => {
+      console.log(`  ${index + 1}. ${participant}`);
+    });
+  });
+
+  console.log('\n🔒 Note: This app now uses ONLY Firebase data - no hardcoded participant lists as fallback');
+};
+
+// Make the test function available globally for console access
+window.testFirebaseParticipantCounts = testFirebaseParticipantCounts;
 
 // Enhanced saveToDatabase function to create historical records:
 const saveToDatabase = async () => {
@@ -291,11 +325,30 @@ const performRotation = () => {
     return;
   }
 
-  // Safety check: Don't proceed if participant lists aren't loaded yet
+  // Enhanced safety check: Ensure participant lists are loaded from Firebase
   if (!participantLists || Object.keys(participantLists).length === 0) {
-    showAlert('Participant lists are still loading. Please wait and try again.', 'warning');
+    showAlert(
+      'Participant lists are not available. Please ensure Firebase data is loaded and try again.',
+      'error',
+      'Data Not Available'
+    );
     return;
   }
+
+  // Verify we have the essential lists from Firebase
+  const requiredLists = ['chairmen', 'sisters', 'prayers'];
+  const missingLists = requiredLists.filter(listKey => !participantLists[listKey] || !participantLists[listKey].participants || participantLists[listKey].participants.length === 0);
+  
+  if (missingLists.length > 0) {
+    showAlert(
+      `Missing required participant lists from Firebase: ${missingLists.join(', ')}. Please contact the administrator.`,
+      'error',
+      'Incomplete Data'
+    );
+    return;
+  }
+
+  console.log('✅ All participant data loaded from Firebase - proceeding with auto-assign');
 
   // Check if any assignments already exist
   const hasExistingAssignments = weeks.some(week => {
@@ -327,11 +380,18 @@ const performRotation = () => {
 
 // Extracted the actual rotation logic into a separate function
 const executeRotation = () => {
-  // Safety check: Don't proceed if participant lists aren't loaded yet
+  // Enhanced safety check: Ensure participant lists are loaded from Firebase
   if (!participantLists || Object.keys(participantLists).length === 0) {
-    showAlert('Participant lists are still loading. Please wait and try again.', 'warning');
+    showAlert(
+      'Cannot proceed with auto-assign: participant lists not available from Firebase.',
+      'error',
+      'Data Not Available'
+    );
     return;
   }
+
+  console.log('🚀 Starting auto-assign with Firebase data only - no hardcoded fallbacks');
+  console.log('📊 Available participant lists:', Object.keys(participantLists));
 
   // First, fix any existing sister assignments
   fixSisterAssignments();
@@ -1473,8 +1533,14 @@ const executeRotation = () => {
     markAsChanged();
   };
 
-  // Edit participant list
+  // Edit participant list - Firebase-only mode
   const updateParticipantList = async (key, participants) => {
+    // Safety check: ensure we have existing participant lists
+    if (!participantLists) {
+      showAlert('Cannot update participant lists: No data loaded from Firebase.', 'error');
+      return;
+    }
+
     setSavingLists(true);
     
     const updatedLists = {
@@ -1497,10 +1563,11 @@ const executeRotation = () => {
       };
       
       await saveScheduleToFirebase(data);
-      console.log('Participant lists auto-saved to Firebase');
+      console.log('✅ Participant lists auto-saved to Firebase (Firebase-only mode)');
+      showToast('Participant list updated and saved to Firebase', 'success');
     } catch (error) {
-      console.error('Error auto-saving participant lists:', error);
-      // Don't show alert for auto-save errors, just log them
+      console.error('❌ Error auto-saving participant lists:', error);
+      showAlert(`Error saving to Firebase: ${error.message}`, 'error');
     } finally {
       setSavingLists(false);
     }
@@ -3446,11 +3513,19 @@ const printSlips = () => {
     );
   }
 
-  // Show loading spinner while participant lists are being loaded
+  // Show loading spinner while Firebase data is being loaded
   if (loading || !participantLists) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <div className="text-xl">Loading participant data... Please wait...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="text-xl font-semibold text-gray-700 mb-2">Loading from Firebase...</div>
+          <div className="text-sm text-gray-500">
+            Connecting to Firebase database to load participant lists and schedules.
+            <br />
+            This app now uses only Firebase data - no local fallbacks.
+          </div>
+        </div>
       </div>
     );
   }
