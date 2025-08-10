@@ -382,6 +382,23 @@ const executeRotation = () => {
   console.log('🚀 Starting auto-assign with Firebase data only - no hardcoded fallbacks');
   console.log('📊 Available participant lists:', Object.keys(participantLists));
 
+  // STEP 1: Clear ALL existing assignments to ensure clean slate
+  console.log('🧹 Clearing all existing assignments...');
+  weeks.forEach(week => {
+    // Clear week-level assignments
+    week.chairman = '';
+    week.openingPrayer = '';
+    week.closingPrayer = '';
+    
+    // Clear all section item assignments
+    week.sections.forEach(section => {
+      section.items.forEach(item => {
+        item.assignedName = '';
+        item.assignedSecondary = '';
+      });
+    });
+  });
+
   // First, fix any existing sister assignments
   fixSisterAssignments();
   
@@ -461,8 +478,8 @@ const executeRotation = () => {
     // Priority order for assignments
     const priorityAssignments = [];
     
-    // Priority 1: Chairman (Jacom)
-    if (!week.chairman && participantLists.chairmen) {
+    // Priority 1: Chairman (Jacom) - always assign since we cleared everything
+    if (participantLists.chairmen) {
       priorityAssignments.push({
         priority: 1,
         type: 'chairman',
@@ -581,8 +598,8 @@ const executeRotation = () => {
       });
     });
     
-    // Priority 9: Opening Prayer
-    if (!week.openingPrayer && participantLists.prayers) {
+    // Priority 9: Opening Prayer - always assign since we cleared everything
+    if (participantLists.prayers) {
       priorityAssignments.push({
         priority: 9,
         type: 'opening_prayer',
@@ -591,8 +608,8 @@ const executeRotation = () => {
       });
     }
     
-    // Priority 9: Closing Prayer (same priority as opening)
-    if (!week.closingPrayer && participantLists.prayers) {
+    // Priority 9: Closing Prayer (same priority as opening) - always assign since we cleared everything
+    if (participantLists.prayers) {
       priorityAssignments.push({
         priority: 9,
         type: 'closing_prayer',
