@@ -5,7 +5,7 @@ import { parseEpubFile } from '../services/epubParser';
 import { AlertModal, ConfirmModal, PromptModal, Toast } from './Modal';
 import './slips.css';
 
-const MeetingScheduler = () => {
+const MeetingScheduler = ({ userToken }) => {
   // No more hardcoded participant lists - everything comes from Firebase
 
   // State management
@@ -55,6 +55,12 @@ useEffect(() => {
       if (data && data.participantLists) {
         console.log('✅ Loading participant lists from Firebase');
         setParticipantLists(data.participantLists);
+        
+        // Check if this is legacy data that needs migration
+        if (data.needsMigration) {
+          console.log('🔄 Legacy data detected - will migrate on next save');
+          showToast('Legacy data loaded - will be updated with new security on next save', 'info');
+        }
         
         // Load other data if available
         if (data.previousAssignments) setPreviousAssignments(data.previousAssignments);
@@ -222,7 +228,7 @@ const saveToDatabase = async () => {
               savedAt: new Date().toISOString()
             };
             
-            await saveScheduleToFirebase(data);
+            await saveScheduleToFirebase(data, userToken);
             
             showToast(`Schedule "${title.trim()}" saved successfully to history!`, 'success');
             
@@ -1577,7 +1583,7 @@ const executeRotation = () => {
         savedAt: new Date().toISOString()
       };
       
-      await saveScheduleToFirebase(data);
+      await saveScheduleToFirebase(data, userToken);
       console.log('✅ Participant lists auto-saved to Firebase (Firebase-only mode)');
       showToast('Participant list updated and saved to Firebase', 'success');
     } catch (error) {
@@ -3140,7 +3146,7 @@ const deleteHistoryItem = async (historyId) => {
           savedAt: new Date().toISOString()
         };
         
-        await saveScheduleToFirebase(data);
+        await saveScheduleToFirebase(data, userToken);
         showToast('Schedule deleted from history successfully!', 'success');
       } catch (error) {
         console.error('Error deleting history item:', error);
@@ -3242,7 +3248,7 @@ const updateHistoryItem = async () => {
           savedAt: new Date().toISOString()
         };
         
-        await saveScheduleToFirebase(data);
+        await saveScheduleToFirebase(data, userToken);
         
         const updatedHistoryItem = newHistory.find(item => item.id === editingHistoryId);
         showToast(`Updated "${updatedHistoryItem.title}" successfully!`, 'success');

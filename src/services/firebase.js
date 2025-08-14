@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase, ref, set, get, child } from 'firebase/database';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 
 // Firebase config
 const firebaseConfig = {
@@ -14,22 +15,27 @@ const firebaseConfig = {
 
 let app = null;
 let database = null;
+let auth = null;
 
 export const initializeFirebase = async () => {
   if (!app) {
     app = initializeApp(firebaseConfig);
     database = getDatabase(app);
+    auth = getAuth(app);
   }
-  return { app, database };
+  return { app, database, auth };
 };
 
-export const saveScheduleToFirebase = async (data) => {
+export const saveScheduleToFirebase = async (data, token = null) => {
   if (!database) {
     await initializeFirebase();
   }
   
+  // Add token for write access if provided
+  const dataWithToken = token ? { ...data, token } : data;
+  
   const scheduleRef = ref(database, 'meetingSchedule');
-  await set(scheduleRef, data);
+  await set(scheduleRef, dataWithToken);
 };
 
 export const loadScheduleFromFirebase = async () => {
@@ -41,8 +47,69 @@ export const loadScheduleFromFirebase = async () => {
   const snapshot = await get(child(dbRef, 'meetingSchedule'));
   
   if (snapshot.exists()) {
-    return snapshot.val();
+    const data = snapshot.val();
+    
+    // Migration: If data doesn't have a token, it's legacy data
+    if (!data.token) {
+      console.log('📦 Found legacy data without token - migrating...');
+      return { ...data, needsMigration: true };
+    }
+    
+    return data;
   } else {
     return null;
   }
+};
+
+// Authentication functions
+export const signIn = async (email, password, rememberMe = true) => {
+  if (!auth) {
+    await initializeFirebase();
+  }
+  
+  if (rememberMe) {
+    // Store credentials securely for auto-login
+    localStorage.setItem('userEmail', email);
+    // Note: In production, use more secure storage for sensitive data
+  }
+  
+  return await signInWithEmailAndPassword(auth, email, password);
+};
+
+export const signUp = async (email, password) => {
+  if (!auth) {
+    await initializeFirebase();
+  }
+  return await createUserWithEmailAndPassword(auth, email, password);
+};
+
+export const autoSignIn = async () => {
+  const savedEmail = localStorage.getItem('userEmail');
+  if (savedEmail && savedEmail === 'your-email@example.com') { // Replace with your email
+    // For single user, you could auto-sign in with saved credentials
+    // This is a simplified approach - in production, use proper token management
+    return true;
+  }
+  return false;
+};
+
+export const logOut = async () => {
+  if (!auth) {
+    await initializeFirebase();
+  }
+  return await signOut(auth);
+};
+
+export const getCurrentUser = () => {
+  if (!auth) {
+    return null;
+  }
+  return auth.currentUser;
+};
+
+export const onAuthChange = (callback) => {
+  if (!auth) {
+    initializeFirebase();
+  }
+  return onAuthStateChanged(auth, callback);
 };
