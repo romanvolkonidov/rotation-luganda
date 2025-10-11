@@ -54,6 +54,8 @@ useEffect(() => {
       // Only load from Firebase - no more fallback to hardcoded data
       if (data && data.participantLists) {
         console.log('✅ Loading participant lists from Firebase');
+        console.log('📊 Firebase data keys:', Object.keys(data));
+        console.log('🔍 Full data structure:', JSON.stringify(data, null, 2).substring(0, 500));
         setParticipantLists(data.participantLists);
         
         // Check if this is legacy data that needs migration
@@ -63,9 +65,25 @@ useEffect(() => {
         }
         
         // Load other data if available
-        if (data.previousAssignments) setPreviousAssignments(data.previousAssignments);
-        if (data.scheduleHistory) setScheduleHistory(data.scheduleHistory);
-        if (data.rotationIndices) setRotationIndices(data.rotationIndices);
+        if (data.previousAssignments) {
+          console.log('✅ Loading previousAssignments:', data.previousAssignments.length, 'items');
+          setPreviousAssignments(data.previousAssignments);
+        } else {
+          console.warn('⚠️ No previousAssignments found in Firebase');
+        }
+        
+        if (data.scheduleHistory) {
+          console.log('✅ Loading scheduleHistory:', data.scheduleHistory.length, 'schedules');
+          console.log('📚 Schedule titles:', data.scheduleHistory.map(s => s.title).join(', '));
+          setScheduleHistory(data.scheduleHistory);
+        } else {
+          console.warn('⚠️ No scheduleHistory found in Firebase');
+        }
+        
+        if (data.rotationIndices) {
+          console.log('✅ Loading rotationIndices');
+          setRotationIndices(data.rotationIndices);
+        }
         // Note: We intentionally don't load data.weeks to start with an empty schedule
       } else {
         // No data in Firebase - show error and instructions
@@ -477,6 +495,9 @@ const executeRotation = () => {
   // Initialize appearance tracking outside the week loop
   const scheduleAppearanceCount = new Map(); // Track total appearances per sister (max 2)
   
+  // NEW: Track assignments across the ENTIRE schedule for better balancing
+  const scheduleAssignmentCount = new Map(); // Track how many times each person is assigned in THIS schedule
+  
   // Process each week
   weeks.forEach((week, weekIndex) => {
     const weekAssignments = {}; // Track who's assigned this week
@@ -509,10 +530,10 @@ const executeRotation = () => {
             assignTo: (name) => { item.assignedName = name; }
           });
           
-          // Priority 7: Puonjruok reader (secondary)
+          // Priority 2.5: Puonjruok reader (secondary) - Higher priority than Assignment 3
           if (item.secondaryList && participantLists[item.secondaryList]) {
             priorityAssignments.push({
-              priority: 7,
+              priority: 2.5,
               type: 'puonjruok_reader',
               listKey: item.secondaryList,
               item: item,
@@ -1097,28 +1118,21 @@ const executeRotation = () => {
           if (canAssign && assignment.needsDifferentFrom) {
             canAssign = name !== assignment.needsDifferentFrom();
           }
-             // Consider historical data - prefer people with fewer recent assignments
-        if (canAssign && historicalData[name]) {
-          const recentAssignmentCount = historicalData[name].recentAssignments.length;
-          const totalHistoricalCount = historicalData[name].total;
           
-          // If this person has significantly more assignments than others, try to skip
-          if (attempts < maxAttempts / 2) { // Only try alternatives for first half of attempts
-            const avgAssignments = Object.values(historicalData)
-              .filter(h => list.includes(Object.keys(historicalData).find(k => historicalData[k] === h)))
-              .reduce((sum, h) => sum + h.total, 0) / list.length;
-            
-            if (totalHistoricalCount > avgAssignments + 2) {
-              canAssign = false; // Skip this person and try next
-            }
-          }
-        }
+          // PURE SEQUENCE APPROACH: 
+          // - Advance rotation index regardless of assignment
+          // - Only skip person if busy THIS WEEK (higher priority assignment)
+          // - Natural spacing emerges from the sequence itself
+          // - No complex balancing logic that interferes with sequence
           
           if (canAssign) {
             assignment.assignTo(name);
             weekAssignments[name] = true;
+            // Track assignments across schedule
+            scheduleAssignmentCount.set(name, (scheduleAssignmentCount.get(name) || 0) + 1);
             currentRotationIndices[assignment.listKey] = (currentIndex + 1) % list.length;
             assigned = true;
+            console.log(`✅ Assigned ${name} to ${assignment.type} (total in schedule: ${scheduleAssignmentCount.get(name)})`);
           } else {
             // Skip to next person in this list
             currentRotationIndices[assignment.listKey] = (currentIndex + 1) % list.length;
@@ -1280,6 +1294,43 @@ const executeRotation = () => {
     if (scheduleStudentTracker.has(sister)) roles.push('student');
     if (scheduleAssistantTracker.has(sister)) roles.push('assistant');
     console.log(`${sister}: ${count} time(s) - ${roles.join(', ')}`);
+  });
+  
+  // NEW: Show assignment distribution for brothers across all lists
+  console.log('\n🎯 BROTHER ASSIGNMENT DISTRIBUTION:');
+  const brotherAssignments = new Map();
+  weeks.forEach((week, weekIndex) => {
+    // Count chairman
+    if (week.chairman) {
+      brotherAssignments.set(week.chairman, (brotherAssignments.get(week.chairman) || 0) + 1);
+    }
+    // Count all section assignments
+    week.sections.forEach(section => {
+      section.items.forEach(item => {
+        if (item.assignedName && !item.isDouble) {
+          brotherAssignments.set(item.assignedName, (brotherAssignments.get(item.assignedName) || 0) + 1);
+        }
+        if (item.assignedSecondary) {
+          brotherAssignments.set(item.assignedSecondary, (brotherAssignments.get(item.assignedSecondary) || 0) + 1);
+        }
+      });
+    });
+    // Count prayers
+    if (week.openingPrayer) {
+      brotherAssignments.set(week.openingPrayer, (brotherAssignments.get(week.openingPrayer) || 0) + 1);
+    }
+    if (week.closingPrayer) {
+      brotherAssignments.set(week.closingPrayer, (brotherAssignments.get(week.closingPrayer) || 0) + 1);
+    }
+  });
+  
+  // Sort by assignment count (most assigned first)
+  const sortedBrotherAssignments = Array.from(brotherAssignments.entries())
+    .sort((a, b) => b[1] - a[1]);
+  
+  sortedBrotherAssignments.forEach(([brother, count]) => {
+    const status = count > 3 ? '⚠️' : count > 2 ? '📊' : '✅';
+    console.log(`${status} ${brother}: ${count} assignment(s)`);
   });
   
   // Show success message
@@ -1580,6 +1631,8 @@ const executeRotation = () => {
         weeks,
         participantLists: updatedLists,
         previousAssignments,
+        scheduleHistory, // CRITICAL FIX: Include scheduleHistory to prevent deletion
+        rotationIndices, // Also include rotation indices
         savedAt: new Date().toISOString()
       };
       
