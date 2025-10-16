@@ -138,26 +138,35 @@ function parseMwanduSection(doc) {
     'BUULIRA N\'OBUNYIIKIVU'
   ]);
   
+  console.log(`Found ${sectionItems.length} total items in EKIGAMBO section`);
+  
   for (const item of sectionItems) {
-    if (item.number >= 1 && item.number <= 3) {
-      // Determine participant list based on item number
-      let participantList = 'assignment1';
-      if (item.number === 2) participantList = 'assignment2';
-      if (item.number === 3) participantList = 'assignment3';
-      
-      section.items.push({
-        id: Date.now() + item.number + Math.random(),
-        description: item.description,
-        type: 'regular',
-        participantList: participantList,
-        secondaryList: null,
-        assignedName: '',
-        assignedSecondary: '',
-        isDouble: false
-      });
-      
-      console.log(`Added EKIGAMBO item ${item.number}: ${item.description}`);
+    // Accept all items in this section based on their position
+    let participantList = 'assignment1';
+    
+    // Assign based on item position in section
+    if (section.items.length === 0) {
+      participantList = 'assignment1';
+    } else if (section.items.length === 1) {
+      participantList = 'assignment2';
+    } else if (section.items.length === 2) {
+      participantList = 'puonjruokReaders'; // Bible reading (3rd item)
+    } else {
+      participantList = 'assignment3'; // Additional items if any
     }
+    
+    section.items.push({
+      id: Date.now() + item.number + Math.random(),
+      description: item.description,
+      type: 'regular',
+      participantList: participantList,
+      secondaryList: null,
+      assignedName: '',
+      assignedSecondary: '',
+      isDouble: false
+    });
+    
+    console.log(`Added EKIGAMBO item ${item.number}: ${item.description} -> ${participantList}`);
   }
 
   console.log(`EKIGAMBO section has ${section.items.length} items`);
@@ -193,22 +202,23 @@ function parseTiegriSection(doc) {
     'OBULAMU BW\'EKIKRISTAAYO'
   ]);
   
+  console.log(`Found ${sectionItems.length} total items in BUULIRA section`);
+  
   for (const item of sectionItems) {
-    if (item.number >= 4 && item.number <= 10) {
-      section.items.push({
-        id: Date.now() + item.number + Math.random(),
-        title: item.description,
-        description: item.description,
-        type: 'regular',
-        participantList: 'sisters',
-        secondaryList: null,
-        assignedName: '',
-        assignedSecondary: '',
-        isDouble: true // Sisters work in pairs
-      });
-      
-      console.log(`Added BUULIRA item ${item.number}: ${item.description}`);
-    }
+    // Accept all items in this section - they're all sister assignments
+    section.items.push({
+      id: Date.now() + item.number + Math.random(),
+      title: item.description,
+      description: item.description,
+      type: 'regular',
+      participantList: 'sisters',
+      secondaryList: null,
+      assignedName: '',
+      assignedSecondary: '',
+      isDouble: true // Sisters work in pairs
+    });
+    
+    console.log(`Added BUULIRA item ${item.number}: ${item.description}`);
   }
 
   console.log(`BUULIRA section has ${section.items.length} items`);
@@ -242,32 +252,37 @@ function parseNgimawaSection(doc) {
   // Find the section content boundaries - from header to end of document
   const sectionItems = findItemsInSection(doc, ngimawaHeader, []);
   
+  console.log(`Found ${sectionItems.length} total items in OBULAMU section`);
+  
   for (const item of sectionItems) {
-    if (item.number >= 7) {
-      // Check if this is a Puonjruok item
-      let participantList = 'ngimawa';
-      let secondaryList = null;
-      let type = 'regular';
-      
-      if (item.description.includes('Puonjruok')) {
-        participantList = 'puonjruok_muma';
-        secondaryList = 'puonjruok_readers';
-        type = 'puonjruok';
-      }
-      
-      section.items.push({
-        id: Date.now() + item.number + Math.random(),
-        description: item.description,
-        type: type,
-        participantList: participantList,
-        secondaryList: secondaryList,
-        assignedName: '',
-        assignedSecondary: secondaryList ? '' : '',
-        isDouble: false
-      });
-      
-      console.log(`Added OBULAMU item ${item.number}: ${item.description}`);
+    // Accept all items in this section
+    // Check if this is a Puonjruok item (Bible Study)
+    let participantList = 'ngimawa';
+    let secondaryList = null;
+    let type = 'regular';
+    
+    // Check if description contains "Okusoma kwa Bayibuli" (Bible Study)
+    if (item.description.toLowerCase().includes('okusoma kwa bayibuli') ||
+        item.description.toLowerCase().includes('bible study') ||
+        item.description.toLowerCase().includes('okubiri')) {
+      participantList = 'puonjruokMuma';
+      secondaryList = 'puonjruokReaders';
+      type = 'puonjruok';
     }
+    
+    section.items.push({
+      id: Date.now() + item.number + Math.random(),
+      title: item.description,
+      description: item.description,
+      type: type,
+      participantList: participantList,
+      secondaryList: secondaryList,
+      assignedName: '',
+      assignedSecondary: '',
+      isDouble: false
+    });
+    
+    console.log(`Added OBULAMU item ${item.number}: ${item.description} -> ${participantList}`);
   }
 
   console.log(`OBULAMU section has ${section.items.length} items`);
