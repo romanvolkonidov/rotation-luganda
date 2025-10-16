@@ -3812,19 +3812,23 @@ const printSlips = () => {
             </div>
           )}
           
-          {/* Step 3: Auto Assign */}
+          {/* Step 3: Check Apply Yourself */}
           {tutorialStep === 3 && (
             <div 
-              className="absolute bg-white rounded-lg shadow-2xl p-5 max-w-sm animate-pulse-border"
-              style={{ top: '120px', right: '20px' }}
+              className="absolute bg-white rounded-lg shadow-2xl p-5 max-w-md animate-pulse-border"
+              style={{ top: '200px', left: '50%', transform: 'translateX(-50%)' }}
             >
               <div className="flex items-start gap-3">
                 <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">3</div>
                 <div>
-                  <h3 className="font-bold text-gray-800 mb-2">Auto Assign</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Click here to automatically assign all participants fairly. The app uses smart rotation to ensure everyone gets equal opportunities and sister pairs never repeat.
+                  <h3 className="font-bold text-gray-800 mb-2">⚠️ Check "Apply Yourself" Assignments</h3>
+                  <p className="text-sm text-gray-600 mb-3">
+                    <strong>IMPORTANT:</strong> Before auto-assign, check if any "Apply Yourself" assignments in BUULIRA section are for brothers or sisters.
                   </p>
+                  <ul className="text-sm text-gray-600 mb-4 space-y-1 list-disc ml-4">
+                    <li><strong>For brothers:</strong> Select "Okwogera kwa Ddakiika 5 (5 min talk)" from dropdown</li>
+                    <li><strong>For sisters:</strong> Leave as "Bannyanyaze (Sisters)"</li>
+                  </ul>
                   <div className="flex gap-2 justify-end">
                     <button onClick={() => setTutorialStep(2)} className="text-sm text-gray-500 hover:text-gray-700">← Back</button>
                     <button onClick={() => setTutorialStep(4)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">Next →</button>
@@ -3834,18 +3838,18 @@ const printSlips = () => {
             </div>
           )}
           
-          {/* Step 4: Save */}
+          {/* Step 4: Auto Assign */}
           {tutorialStep === 4 && (
             <div 
               className="absolute bg-white rounded-lg shadow-2xl p-5 max-w-sm animate-pulse-border"
-              style={{ top: '180px', right: '20px' }}
+              style={{ top: '120px', right: '20px' }}
             >
               <div className="flex items-start gap-3">
                 <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">4</div>
                 <div>
-                  <h3 className="font-bold text-gray-800 mb-2">Save Schedule</h3>
+                  <h3 className="font-bold text-gray-800 mb-2">Auto Assign</h3>
                   <p className="text-sm text-gray-600 mb-4">
-                    Save your schedule here. The app tracks history to ensure fair rotation in future months and prevents repeating sister partnerships.
+                    Click here to automatically assign all participants fairly. The app uses smart rotation, ensures everyone gets equal opportunities, and sister pairs never repeat.
                   </p>
                   <div className="flex gap-2 justify-end">
                     <button onClick={() => setTutorialStep(3)} className="text-sm text-gray-500 hover:text-gray-700">← Back</button>
@@ -3856,21 +3860,109 @@ const printSlips = () => {
             </div>
           )}
           
-          {/* Step 5: History */}
+          {/* Step 5: Manual Edit */}
           {tutorialStep === 5 && (
+            <div 
+              className="absolute bg-white rounded-lg shadow-2xl p-5 max-w-sm animate-pulse-border"
+              style={{ top: '300px', left: '50%', transform: 'translateX(-50%)' }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">5</div>
+                <div>
+                  <h3 className="font-bold text-gray-800 mb-2">Manual Editing</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    After auto-assign, you can manually edit any assignment by clicking on it. Change names, adjust assignments, or swap participants as needed.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={() => setTutorialStep(4)} className="text-sm text-gray-500 hover:text-gray-700">← Back</button>
+                    <button onClick={() => setTutorialStep(6)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">Next →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Step 6: Preview */}
+          {tutorialStep === 6 && (
+            <div 
+              className="absolute bg-white rounded-lg shadow-2xl p-5 max-w-sm animate-pulse-border"
+              style={{ top: '120px', right: '140px' }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">6</div>
+                <div>
+                  <h3 className="font-bold text-gray-800 mb-2">Preview Schedule</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Click "Preview" to see how your schedule will look. In preview mode, you can print to PDF for distribution.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={() => setTutorialStep(5)} className="text-sm text-gray-500 hover:text-gray-700">← Back</button>
+                    <button onClick={() => setTutorialStep(7)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">Next →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Step 7: Slips */}
+          {tutorialStep === 7 && (
+            <div 
+              className="absolute bg-white rounded-lg shadow-2xl p-5 max-w-sm animate-pulse-border"
+              style={{ top: '120px', right: '250px' }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">7</div>
+                <div>
+                  <h3 className="font-bold text-gray-800 mb-2">Generate Slips</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Click "Slips" to generate distributable assignment slips with pre-filled information. No more manually writing them!
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={() => setTutorialStep(6)} className="text-sm text-gray-500 hover:text-gray-700">← Back</button>
+                    <button onClick={() => setTutorialStep(8)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">Next →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Step 8: Save */}
+          {tutorialStep === 8 && (
+            <div 
+              className="absolute bg-white rounded-lg shadow-2xl p-5 max-w-sm animate-pulse-border"
+              style={{ top: '180px', right: '20px' }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">8</div>
+                <div>
+                  <h3 className="font-bold text-gray-800 mb-2">Save Schedule</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Save your schedule here. The app tracks history to ensure fair rotation in future months and prevents repeating sister partnerships.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={() => setTutorialStep(7)} className="text-sm text-gray-500 hover:text-gray-700">← Back</button>
+                    <button onClick={() => setTutorialStep(9)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">Next →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Step 9: History */}
+          {tutorialStep === 9 && (
             <div 
               className="absolute bg-white rounded-lg shadow-2xl p-5 max-w-sm animate-pulse-border"
               style={{ top: '120px', right: '180px' }}
             >
               <div className="flex items-start gap-3">
-                <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">5</div>
+                <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">9</div>
                 <div>
                   <h3 className="font-bold text-gray-800 mb-2">View History</h3>
                   <p className="text-sm text-gray-600 mb-4">
                     Access all your saved schedules here. You can view, edit, or load previous schedules. Past schedules help the app ensure fair assignments.
                   </p>
                   <div className="flex gap-2 justify-end">
-                    <button onClick={() => setTutorialStep(4)} className="text-sm text-gray-500 hover:text-gray-700">← Back</button>
+                    <button onClick={() => setTutorialStep(8)} className="text-sm text-gray-500 hover:text-gray-700">← Back</button>
                     <button onClick={() => { 
                       setShowTutorial(false); 
                       setTutorialStep(0); 
