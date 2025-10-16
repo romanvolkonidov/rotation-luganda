@@ -3678,6 +3678,47 @@ const printSlips = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-4">
+      {/* Help Sticker - Fixed position, compact, scrollable */}
+      <div className="fixed bottom-4 right-4 w-72 bg-blue-50 border-2 border-blue-300 rounded-lg shadow-lg z-50 no-print">
+        <div className="bg-blue-500 text-white px-3 py-2 rounded-t-lg font-semibold text-sm flex items-center gap-2">
+          <span>ℹ️</span>
+          <span>Quick Guide</span>
+        </div>
+        <div className="p-3 max-h-64 overflow-y-auto text-xs space-y-2">
+          <div>
+            <strong className="text-blue-700">1. Add Participants</strong>
+            <p className="text-gray-600">Click on each list below, then click <strong>+</strong> to add names</p>
+          </div>
+          <div>
+            <strong className="text-blue-700">2. Import EPUB</strong>
+            <p className="text-gray-600">Click <strong>"Import PDF/EPUB"</strong> and select a Luganda workbook file (mwb_LU_*.epub)</p>
+          </div>
+          <div>
+            <strong className="text-blue-700">3. Auto-Assign</strong>
+            <p className="text-gray-600">Click <strong>"Auto Assign"</strong> to automatically assign everyone fairly with rotation</p>
+          </div>
+          <div>
+            <strong className="text-blue-700">4. Manual Edit</strong>
+            <p className="text-gray-600">Click any assignment to change names manually if needed</p>
+          </div>
+          <div>
+            <strong className="text-blue-700">5. Save Schedule</strong>
+            <p className="text-gray-600">Click <strong>"Save Schedule"</strong> to store it. This helps the app track history for fair rotation in future months</p>
+          </div>
+          <div>
+            <strong className="text-blue-700">6. History</strong>
+            <p className="text-gray-600">Click <strong>"History"</strong> to view, edit, or load previous schedules. Past schedules help ensure fair assignments</p>
+          </div>
+          <div>
+            <strong className="text-blue-700">7. Preview/Print</strong>
+            <p className="text-gray-600">Use <strong>"Preview"</strong> to see final version or <strong>"Slips"</strong> to print assignment cards</p>
+          </div>
+          <div className="pt-2 border-t border-blue-200 text-blue-600 font-semibold">
+            💡 Tip: The app automatically prevents sister pairs from repeating!
+          </div>
+        </div>
+      </div>
+
       <div className="mb-6 flex justify-between items-center no-print">
         <h1 className="text-3xl font-bold text-gray-800">Meeting Schedule Manager</h1>
         {/* Enhanced button group with New Schedule and History */}
