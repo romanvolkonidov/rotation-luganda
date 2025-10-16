@@ -135,7 +135,7 @@ function parseMwanduSection(doc) {
 
   // Find the section content boundaries - from header until the next main section header
   const sectionItems = findItemsInSection(doc, mwanduHeader, [
-    'BUULIRA N\'OBUNYIIKIVU'
+    "BUULIRA N'OBUNYIIKIVU"
   ]);
   
   console.log(`Found ${sectionItems.length} total items in EKIGAMBO section`);
@@ -179,7 +179,7 @@ function parseTiegriSection(doc) {
   // Luganda section header only
   const tiegriHeader = Array.from(doc.querySelectorAll('h2')).find(h2 => {
     const text = h2.textContent.trim();
-    return text === 'BUULIRA N\'OBUNYIIKIVU';
+    return text === "BUULIRA N'OBUNYIIKIVU";
   });
   
   if (!tiegriHeader) {
@@ -199,7 +199,7 @@ function parseTiegriSection(doc) {
 
   // Find the section content boundaries - from header until the next main section header
   const sectionItems = findItemsInSection(doc, tiegriHeader, [
-    'OBULAMU BW\'EKIKRISTAAYO'
+    "OBULAMU BW'EKIKRISTAAYO"
   ]);
   
   console.log(`Found ${sectionItems.length} total items in BUULIRA section`);
@@ -231,7 +231,7 @@ function parseNgimawaSection(doc) {
   // Luganda section header only
   const ngimawaHeader = Array.from(doc.querySelectorAll('h2')).find(h2 => {
     const text = h2.textContent.trim();
-    return text === 'OBULAMU BW\'EKIKRISTAAYO';
+    return text === "OBULAMU BW'EKIKRISTAAYO";
   });
   
   if (!ngimawaHeader) {
