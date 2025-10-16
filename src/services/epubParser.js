@@ -293,18 +293,25 @@ function parseNgimawaSection(doc) {
 function findItemsInSection(doc, sectionHeader, stopAtHeaders) {
   const items = [];
   
-  // Start from the section header's parent div and look for sibling h3 elements
-  let currentElement = sectionHeader.parentElement; // This is the div containing the section header
+  // Start from the section header's parent div
+  let currentElement = sectionHeader.parentElement;
+  
+  console.log(`Starting search from section: ${sectionHeader.textContent}`);
+  console.log(`Will stop at headers: ${stopAtHeaders.join(', ')}`);
   
   // Navigate through sibling elements after the section header div
   while (currentElement && currentElement.nextElementSibling) {
     currentElement = currentElement.nextElementSibling;
     
-    // Check if we've hit a stop header (next main section)
+    // Check if we've hit a stop header (next main section) - check h2 inside current div
     if (currentElement.tagName === 'DIV') {
-      const stopHeader = currentElement.querySelector('h2');
-      if (stopHeader && stopAtHeaders.length > 0 && stopAtHeaders.some(stop => stopHeader.textContent.includes(stop))) {
-        break;
+      const h2Elements = currentElement.querySelectorAll('h2');
+      for (const h2 of h2Elements) {
+        const h2Text = h2.textContent.trim();
+        if (stopAtHeaders.length > 0 && stopAtHeaders.some(stop => h2Text === stop)) {
+          console.log(`Found stop header: "${h2Text}" - stopping section parse`);
+          return items;
+        }
       }
     }
     
