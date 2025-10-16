@@ -433,6 +433,14 @@ const executeRotation = () => {
   const scheduleStudentTracker = new Set();
   const scheduleAssistantTracker = new Set();
   
+  // Track sister pairs used in current schedule to prevent same pairs with swapped roles
+  const usedSisterPairs = new Set();
+  
+  // Helper function to create normalized pair key (alphabetically sorted)
+  const createPairKey = (sister1, sister2) => {
+    return [sister1, sister2].sort().join('|');
+  };
+  
   // Build historical assignment data from all saved schedules
   const historicalAssignments = buildHistoricalAssignmentData();
   
@@ -884,26 +892,33 @@ const executeRotation = () => {
             if (!canAppearAgain(candidate)) return null; // Already appeared twice
             if (!canBeAssistant(candidate)) return null; // Cannot be assistant
             
+            // HARD CONSTRAINT: Check if this pair has been used in current schedule
+            const pairKey = createPairKey(student, candidate);
+            if (usedSisterPairs.has(pairKey)) {
+              console.log(`🚫 Blocking ${candidate}: pair "${pairKey}" already used in this schedule`);
+              return null; // Hard constraint - cannot use same pair even with roles swapped
+            }
+            
+            // HARD CONSTRAINT: Check if this pair has been used in previous schedules
+            const candidateHistory = historicalData[candidate] || { partnerships: [] };
+            const hasBeenPairedInHistory = candidateHistory.partnerships?.includes(student);
+            
+            if (hasBeenPairedInHistory) {
+              console.log(`🚫 Blocking ${candidate}: pair "${pairKey}" already used in previous schedules`);
+              return null; // Hard constraint - do not repeat partnerships from history
+            }
+            
             const weeksSinceLastAppearance = getWeeksSinceLastAppearance(candidate);
             let score = weeksSinceLastAppearance;
             
-            // Add partnership variety bonus/penalty
-            const candidateHistory = historicalData[candidate] || { partnerships: [] };
-            const hasBeenPairedWithStudent = candidateHistory.partnerships?.includes(student);
-            
-            if (hasBeenPairedWithStudent) {
-              score -= 15; // Moderate penalty for having been paired before
-              console.log(`⚖️ Partnership variety: ${candidate} has been paired with ${student} before (-15 points)`);
-            } else {
-              score += 10; // Bonus for new partnership
-              console.log(`✨ Partnership variety: ${candidate} and ${student} would be a new pairing (+10 points)`);
-            }
+            // Note: Partnership variety is now a hard constraint (checked above), so all candidates here are new pairings
+            console.log(`✨ Partnership variety: ${candidate} and ${student} would be a new pairing`);
             
             return {
               name: candidate,
               score: score,
               weeksSinceLastAppearance: weeksSinceLastAppearance,
-              isNewPartnership: !hasBeenPairedWithStudent
+              isNewPartnership: true // Always true now since we hard-block repeat partnerships
             };
           }).filter(Boolean); // Remove null entries
           
@@ -946,6 +961,11 @@ const executeRotation = () => {
           assignSister(student, 'student');
           assignSister(assistant, 'assistant');
           
+          // Track this pair to prevent same pair with swapped roles later
+          const pairKey = createPairKey(student, assistant);
+          usedSisterPairs.add(pairKey);
+          console.log(`🔗 Tracked pair: ${pairKey} (prevents role swap repetition)`);
+          
           // Update rotation index based on assigned sisters for future reference
           // Use the assistant's position + 1 to continue rotation
           if (assistant) {
@@ -982,24 +1002,37 @@ const executeRotation = () => {
             if (fallbackStudent) {
               // Enhance available sisters scoring for assistant selection with partnership variety
               const assistantCandidates = availableWithScores
-                .filter(sisterData => sisterData.name !== fallbackStudent && sisterData.canBeAssistant)
+                .filter(sisterData => {
+                  if (sisterData.name === fallbackStudent) return false; // Can't be same as student
+                  if (!sisterData.canBeAssistant) return false;
+                  
+                  // HARD CONSTRAINT: Check if this pair has been used in current schedule
+                  const pairKey = createPairKey(fallbackStudent, sisterData.name);
+                  if (usedSisterPairs.has(pairKey)) {
+                    console.log(`🚫 Blocking ${sisterData.name} in fallback: pair "${pairKey}" already used in this schedule`);
+                    return false;
+                  }
+                  
+                  // HARD CONSTRAINT: Check if this pair has been used in previous schedules
+                  const candidateHistory = historicalData[sisterData.name] || { partnerships: [] };
+                  const hasBeenPairedInHistory = candidateHistory.partnerships?.includes(fallbackStudent);
+                  
+                  if (hasBeenPairedInHistory) {
+                    console.log(`🚫 Blocking ${sisterData.name} in fallback: pair "${pairKey}" already used in previous schedules`);
+                    return false;
+                  }
+                  
+                  return true;
+                })
                 .map(sisterData => {
                   let score = sisterData.score; // Start with spacing score
                   
-                  // Add partnership variety consideration
-                  const candidateHistory = historicalData[sisterData.name] || { partnerships: [] };
-                  const hasBeenPairedWithStudent = candidateHistory.partnerships?.includes(fallbackStudent);
-                  
-                  if (hasBeenPairedWithStudent) {
-                    score -= 15; // Penalty for repeat partnership
-                  } else {
-                    score += 10; // Bonus for new partnership
-                  }
+                  // Note: All candidates here are new pairings since we hard-block repeats above
                   
                   return {
                     ...sisterData,
                     score: score,
-                    isNewPartnership: !hasBeenPairedWithStudent
+                    isNewPartnership: true // Always true since we block all repeat partnerships
                   };
                 })
                 .sort((a, b) => b.score - a.score); // Re-sort by updated score
@@ -1021,6 +1054,11 @@ const executeRotation = () => {
               weekAssignments[fallbackAssistant] = true;
               assignSister(fallbackStudent, 'student');
               assignSister(fallbackAssistant, 'assistant');
+              
+              // Track this pair to prevent same pair with swapped roles later
+              const pairKey = createPairKey(fallbackStudent, fallbackAssistant);
+              usedSisterPairs.add(pairKey);
+              console.log(`🔗 Tracked fallback pair: ${pairKey} (prevents role swap repetition)`);
             } else {
               console.error(`🚨 CONSTRAINT VIOLATION: Could not assign valid pair, constraints would be violated`);
               // Emergency fallback - but still avoid same role twice in schedule and prefer better spacing
@@ -1062,6 +1100,11 @@ const executeRotation = () => {
                   weekAssignments[emergencyAssistant] = true;
                   assignSister(emergencyStudent, 'student');
                   assignSister(emergencyAssistant, 'assistant');
+                  
+                  // Track this pair even in emergency mode
+                  const pairKey = createPairKey(emergencyStudent, emergencyAssistant);
+                  usedSisterPairs.add(pairKey);
+                  
                   console.error(`🚨 Emergency assignment with spacing consideration (alternation rule relaxed): ${emergencyStudent} (${studentSpacingText}) / ${emergencyAssistant} (${assistantSpacingText})`);
                 } else {
                   // Absolute last resort - use best spacing available
@@ -1077,6 +1120,11 @@ const executeRotation = () => {
                   weekAssignments[absoluteAssistant] = true;
                   assignSister(absoluteStudent, 'student');
                   assignSister(absoluteAssistant, 'assistant');
+                  
+                  // Track this pair even in absolute emergency mode
+                  const pairKey = createPairKey(absoluteStudent, absoluteAssistant);
+                  usedSisterPairs.add(pairKey);
+                  
                   console.error(`🚨 CRITICAL: Absolute emergency assignment with best available spacing (may violate ALL constraints): ${absoluteStudent} / ${absoluteAssistant}`);
                 }
               }
