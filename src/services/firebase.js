@@ -34,7 +34,8 @@ export const saveScheduleToFirebase = async (data, token = null) => {
   // Add token for write access if provided
   const dataWithToken = token ? { ...data, token } : data;
   
-  const scheduleRef = ref(database, 'meetingSchedule');
+  // Use separate path for Luganda version
+  const scheduleRef = ref(database, 'meetingSchedule_Luganda');
   await set(scheduleRef, dataWithToken);
 };
 
@@ -44,7 +45,8 @@ export const loadScheduleFromFirebase = async () => {
   }
   
   const dbRef = ref(database);
-  const snapshot = await get(child(dbRef, 'meetingSchedule'));
+  // Load from Luganda-specific path
+  const snapshot = await get(child(dbRef, 'meetingSchedule_Luganda'));
   
   if (snapshot.exists()) {
     const data = snapshot.val();
