@@ -176,9 +176,14 @@ function parseMwanduSection(doc) {
 function parseTiegriSection(doc) {
   console.log('Looking for BUULIRA section...');
   
+  // Debug: log all h2 headers
+  const allH2s = Array.from(doc.querySelectorAll('h2'));
+  console.log('All h2 headers found:', allH2s.map(h2 => h2.textContent.trim()));
+  
   // Luganda section header only
-  const tiegriHeader = Array.from(doc.querySelectorAll('h2')).find(h2 => {
+  const tiegriHeader = allH2s.find(h2 => {
     const text = h2.textContent.trim();
+    console.log('Checking h2:', JSON.stringify(text));
     return text === "BUULIRA N'OBUNYIIKIVU";
   });
   
