@@ -89,12 +89,17 @@ useEffect(() => {
         // No data in Firebase - initialize with empty lists for fresh start
         console.log('📝 No data found - initializing empty participant lists for Luganda version');
         setParticipantLists({
-          chairmen: { name: 'Abakulembeze', participants: [] },
-          readers: { name: 'Abasomi', participants: [] },
-          assignment1: { name: 'Okusoma 1', participants: [] },
-          assignment2: { name: 'Okusoma 2', participants: [] },
-          assignment3: { name: 'Okusoma 3', participants: [] },
-          assignment4: { name: 'Okusoma 4', participants: [] }
+          chairmen: { name: 'Abakulembeze (Chairmen)', participants: [] },
+          prayers: { name: 'Okusaba (Prayers)', participants: [] },
+          readers: { name: 'Abasomi ba Pulaani (Readers)', participants: [] },
+          assignment1: { name: 'Okusoma 1 (Assignment 1)', participants: [] },
+          assignment2: { name: 'Okusoma 2 (Assignment 2)', participants: [] },
+          assignment3: { name: 'Okusoma 3 (Assignment 3)', participants: [] },
+          assignment4: { name: 'Okusoma 4 (Assignment 4)', participants: [] },
+          sisters: { name: 'Bannyanyaze (Sisters)', participants: [] },
+          ngimawa: { name: 'Obulamu - Bakadde (Elders)', participants: [] },
+          twak: { name: 'Okuvvuunuka (Concluding Comments)', participants: [] },
+          puonjruokMuma: { name: 'Okusoma kw\'Okujjukira (Memorial Readers)', participants: [] }
         });
         
         // Show info message to user
@@ -111,12 +116,17 @@ useEffect(() => {
       // Initialize with empty lists even on error, so app remains functional
       console.log('📝 Initializing empty participant lists due to error');
       setParticipantLists({
-        chairmen: { name: 'Abakulembeze', participants: [] },
-        readers: { name: 'Abasomi', participants: [] },
-        assignment1: { name: 'Okusoma 1', participants: [] },
-        assignment2: { name: 'Okusoma 2', participants: [] },
-        assignment3: { name: 'Okusoma 3', participants: [] },
-        assignment4: { name: 'Okusoma 4', participants: [] }
+        chairmen: { name: 'Abakulembeze (Chairmen)', participants: [] },
+        prayers: { name: 'Okusaba (Prayers)', participants: [] },
+        readers: { name: 'Abasomi ba Pulaani (Readers)', participants: [] },
+        assignment1: { name: 'Okusoma 1 (Assignment 1)', participants: [] },
+        assignment2: { name: 'Okusoma 2 (Assignment 2)', participants: [] },
+        assignment3: { name: 'Okusoma 3 (Assignment 3)', participants: [] },
+        assignment4: { name: 'Okusoma 4 (Assignment 4)', participants: [] },
+        sisters: { name: 'Bannyanyaze (Sisters)', participants: [] },
+        ngimawa: { name: 'Obulamu - Bakadde (Elders)', participants: [] },
+        twak: { name: 'Okuvvuunuka (Concluding Comments)', participants: [] },
+        puonjruokMuma: { name: 'Okusoma kw\'Okujjukira (Memorial Readers)', participants: [] }
       });
       
       // Show Firebase connection error
