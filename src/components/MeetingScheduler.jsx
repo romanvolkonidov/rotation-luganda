@@ -86,28 +86,44 @@ useEffect(() => {
         }
         // Note: We intentionally don't load data.weeks to start with an empty schedule
       } else {
-        // No data in Firebase - show error and instructions
-        console.error('❌ No participant lists found in Firebase');
-        setParticipantLists(null);
+        // No data in Firebase - initialize with empty lists for fresh start
+        console.log('📝 No data found - initializing empty participant lists for Luganda version');
+        setParticipantLists({
+          chairmen: { name: 'Abakulembeze', participants: [] },
+          readers: { name: 'Abasomi', participants: [] },
+          assignment1: { name: 'Okusoma 1', participants: [] },
+          assignment2: { name: 'Okusoma 2', participants: [] },
+          assignment3: { name: 'Okusoma 3', participants: [] },
+          assignment4: { name: 'Okusoma 4', participants: [] }
+        });
         
-        // Show error message to user
+        // Show info message to user
         setTimeout(() => {
-          showAlert(
-            'No participant data found in Firebase. Please contact the administrator to set up the initial participant lists.',
-            'error',
-            'No Data Found'
+          showToast(
+            'Starting fresh! Add participants to begin creating schedules.',
+            'info'
           );
         }, 1000);
       }
     } catch (error) {
       console.error('❌ Error loading data from Firebase:', error);
-      setParticipantLists(null);
+      
+      // Initialize with empty lists even on error, so app remains functional
+      console.log('📝 Initializing empty participant lists due to error');
+      setParticipantLists({
+        chairmen: { name: 'Abakulembeze', participants: [] },
+        readers: { name: 'Abasomi', participants: [] },
+        assignment1: { name: 'Okusoma 1', participants: [] },
+        assignment2: { name: 'Okusoma 2', participants: [] },
+        assignment3: { name: 'Okusoma 3', participants: [] },
+        assignment4: { name: 'Okusoma 4', participants: [] }
+      });
       
       // Show Firebase connection error
       setTimeout(() => {
         showAlert(
-          `Error connecting to Firebase: ${error.message}. Please check your internet connection and try again.`,
-          'error',
+          `Error connecting to Firebase: ${error.message}. Starting with empty lists - you can add participants and save when connection is restored.`,
+          'warning',
           'Firebase Connection Error'
         );
       }, 1000);
