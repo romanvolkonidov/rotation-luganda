@@ -279,13 +279,13 @@ const saveToDatabase = async () => {
   );
 };
 
-// Function to generate slips data from TIEGRI section assignments
-// Function to generate slips data from TIEGRI section assignments
+// Function to generate slips data from BUULIRA section assignments
+// Function to generate slips data from BUULIRA section assignments
 const generateSlipsData = () => {
   const slips = [];
   
   weeks.forEach(week => {
-    // Find the TIEGRI section
+    // Find the BUULIRA section
     const tiegriSection = week.sections.find(section => section.type === 'tiegri');
     
     if (tiegriSection && tiegriSection.items.length > 0) {
@@ -301,7 +301,7 @@ const generateSlipsData = () => {
             name: assignedNames[0], // First name
             assistant: assignedNames.length > 1 ? assignedNames[1] : '—', // Second name or dash
             date: week.dateRange || week.title || `Week ${weeks.indexOf(week) + 1}`,
-            partNumber: `${itemIndex + 4}. ${item.description || 'Assignment'}`, // Part numbers start from 4 in TIEGRI
+            partNumber: `${itemIndex + 4}. ${item.description || 'Assignment'}`, // Part numbers start from 4 in BUULIRA
             hall: 'Main hall' // Always Main hall as specified
           };
           
@@ -318,7 +318,7 @@ const showSlipsPreview = () => {
   const slips = generateSlipsData();
   
   if (slips.length === 0) {
-    showAlert('No TIEGRI assignments found to generate slips for. Please add assignments to the TIEGRI NE TIJ LENDO section first.', 'warning');
+    showAlert('No BUULIRA assignments found to generate slips for. Please add assignments to the BUULIRA N\'OBUNYIIKIVU section first.', 'warning');
     return;
   }
   
@@ -339,7 +339,7 @@ const showSlipsPreview = () => {
 //
 // SOFT PREFERENCES (used as tiebreakers):
 // 1. Maximize spacing between any sister's reappearances (prioritize sisters who haven't appeared recently)
-// 2. Rotate sisters through different TIEGRI points as students (encourage variety)
+// 2. Rotate sisters through different BUULIRA points as students (encourage variety)
 // 3. Avoid repeating the same sister partnerships until all other pairings have occurred (partner variety)
 //
 // This system ensures fair rotation while preventing anyone from being sidelined.
@@ -1400,11 +1400,11 @@ const executeRotation = () => {
       chairman: '',
       openingSong: '',
       openingPrayer: '',
-      middleSong: '', // Song before NGIMAWA section
+      middleSong: '', // Song before OBULAMU section
       sections: [
         {
           id: Date.now() + 1,
-          name: 'MWANDU MA YUDORE E WACH NYASAYE',
+          name: 'EKIGAMBO KYA KATONDA KYA BUGAGGA',
           type: 'mwandu',
           items: [
             {
@@ -1419,7 +1419,7 @@ const executeRotation = () => {
             },
             {
               id: Date.now() + 5,
-              description: 'Puonj Manie Wach Nyasaye (Dak. 10)',
+              description: 'Eby\'Obugagga eby\'eby\'Omwoyo (Ddak. 10)',
               type: 'regular',
               participantList: 'assignment2', // Point 2 always uses Assignment 2
               secondaryList: null,
@@ -1429,7 +1429,7 @@ const executeRotation = () => {
             },
             {
               id: Date.now() + 6,
-              description: 'Somo Muma (Dak. 4)',
+              description: 'Okusoma Bayibuli (Ddak. 4)',
               type: 'regular',
               participantList: 'assignment3', // Point 3 always uses Assignment 3
               secondaryList: null,
@@ -1441,18 +1441,18 @@ const executeRotation = () => {
         },
         {
           id: Date.now() + 2,
-          name: 'TIEGRI NE TIJ LENDO',
+          name: 'BUULIRA N\'OBUNYIIKIVU',
           type: 'tiegri',
-          items: [] // No auto-assignment for TIEGRI - user must manually add and assign
+          items: [] // No auto-assignment for BUULIRA - user must manually add and assign
         },
         {
           id: Date.now() + 3,
-          name: 'NGIMAWA KAKA JOKRISTO',
+          name: 'OBULAMU BW\'EKIKRISTAAYO',
           type: 'ngimawa',
           items: [
             {
               id: Date.now() + 7,
-              description: 'Puonjruok Muma e Kanyakla (Dak. 30)',
+              description: 'Okuyiga Bayibuli okw\'Ekibiina (Ddak. 30)',
               type: 'puonjruok',
               participantList: 'puonjruok_muma', // Uses dedicated Puonjruok Muma list
               secondaryList: 'puonjruok_readers',

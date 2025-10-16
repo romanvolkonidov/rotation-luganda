@@ -110,28 +110,33 @@ function parseWeekContent(htmlContent, fileName) {
 }
 
 function parseMwanduSection(doc) {
-  console.log('Looking for MWANDU section...');
+  console.log('Looking for EKIGAMBO section...');
   
-  const mwanduHeader = Array.from(doc.querySelectorAll('h2')).find(h2 => 
-    h2.textContent.trim() === 'MWANDU MA YUDORE E WACH NYASAYE'
-  );
+  // Luganda section header only
+  const mwanduHeader = Array.from(doc.querySelectorAll('h2')).find(h2 => {
+    const text = h2.textContent.trim();
+    return text === 'EKIGAMBO KYA KATONDA KYA BUGAGGA';
+  });
   
   if (!mwanduHeader) {
-    console.log('No MWANDU header found');
+    console.log('No EKIGAMBO header found');
     return null;
   }
 
-  console.log('Found MWANDU header');
+  const sectionName = mwanduHeader.textContent.trim();
+  console.log('Found section header:', sectionName);
 
   const section = {
     id: Date.now() + 1 + Math.random(),
-    name: 'MWANDU MA YUDORE E WACH NYASAYE',
+    name: sectionName,
     type: 'mwandu',
     items: []
   };
 
-  // Find the section content boundaries - from MWANDU header until the next main section header
-  const sectionItems = findItemsInSection(doc, mwanduHeader, ['TIEGRI NE TIJ LENDO']);
+  // Find the section content boundaries - from header until the next main section header
+  const sectionItems = findItemsInSection(doc, mwanduHeader, [
+    'BUULIRA N\'OBUNYIIKIVU'
+  ]);
   
   for (const item of sectionItems) {
     if (item.number >= 1 && item.number <= 3) {
@@ -151,37 +156,42 @@ function parseMwanduSection(doc) {
         isDouble: false
       });
       
-      console.log(`Added MWANDU item ${item.number}: ${item.description}`);
+      console.log(`Added EKIGAMBO item ${item.number}: ${item.description}`);
     }
   }
 
-  console.log(`MWANDU section has ${section.items.length} items`);
+  console.log(`EKIGAMBO section has ${section.items.length} items`);
   return section.items.length > 0 ? section : null;
 }
 
 function parseTiegriSection(doc) {
-  console.log('Looking for TIEGRI section...');
+  console.log('Looking for BUULIRA section...');
   
-  const tiegriHeader = Array.from(doc.querySelectorAll('h2')).find(h2 => 
-    h2.textContent.trim() === 'TIEGRI NE TIJ LENDO'
-  );
+  // Luganda section header only
+  const tiegriHeader = Array.from(doc.querySelectorAll('h2')).find(h2 => {
+    const text = h2.textContent.trim();
+    return text === 'BUULIRA N\'OBUNYIIKIVU';
+  });
   
   if (!tiegriHeader) {
-    console.log('No TIEGRI header found');
+    console.log('No BUULIRA header found');
     return null;
   }
 
-  console.log('Found TIEGRI header');
+  const sectionName = tiegriHeader.textContent.trim();
+  console.log('Found section header:', sectionName);
 
   const section = {
     id: Date.now() + 2 + Math.random(),
-    name: 'TIEGRI NE TIJ LENDO',
+    name: sectionName,
     type: 'tiegri',
     items: []
   };
 
-  // Find the section content boundaries - from TIEGRI header until the next main section header
-  const sectionItems = findItemsInSection(doc, tiegriHeader, ['NGIMAWA KAKA JOKRISTO']);
+  // Find the section content boundaries - from header until the next main section header
+  const sectionItems = findItemsInSection(doc, tiegriHeader, [
+    'OBULAMU BW\'EKIKRISTAAYO'
+  ]);
   
   for (const item of sectionItems) {
     if (item.number >= 4 && item.number <= 10) {
@@ -197,36 +207,39 @@ function parseTiegriSection(doc) {
         isDouble: true // Sisters work in pairs
       });
       
-      console.log(`Added TIEGRI item ${item.number}: ${item.description}`);
+      console.log(`Added BUULIRA item ${item.number}: ${item.description}`);
     }
   }
 
-  console.log(`TIEGRI section has ${section.items.length} items`);
+  console.log(`BUULIRA section has ${section.items.length} items`);
   return section.items.length > 0 ? section : null;
 }
 
 function parseNgimawaSection(doc) {
-  console.log('Looking for NGIMAWA section...');
+  console.log('Looking for OBULAMU section...');
   
-  const ngimawaHeader = Array.from(doc.querySelectorAll('h2')).find(h2 => 
-    h2.textContent.trim() === 'NGIMAWA KAKA JOKRISTO'
-  );
+  // Luganda section header only
+  const ngimawaHeader = Array.from(doc.querySelectorAll('h2')).find(h2 => {
+    const text = h2.textContent.trim();
+    return text === 'OBULAMU BW\'EKIKRISTAAYO';
+  });
   
   if (!ngimawaHeader) {
-    console.log('No NGIMAWA header found');
+    console.log('No OBULAMU header found');
     return null;
   }
 
-  console.log('Found NGIMAWA header');
+  const sectionName = ngimawaHeader.textContent.trim();
+  console.log('Found section header:', sectionName);
 
   const section = {
     id: Date.now() + 3 + Math.random(),
-    name: 'NGIMAWA KAKA JOKRISTO',
+    name: sectionName,
     type: 'ngimawa',
     items: []
   };
 
-  // Find the section content boundaries - from NGIMAWA header to end of document
+  // Find the section content boundaries - from header to end of document
   const sectionItems = findItemsInSection(doc, ngimawaHeader, []);
   
   for (const item of sectionItems) {
@@ -253,11 +266,11 @@ function parseNgimawaSection(doc) {
         isDouble: false
       });
       
-      console.log(`Added NGIMAWA item ${item.number}: ${item.description}`);
+      console.log(`Added OBULAMU item ${item.number}: ${item.description}`);
     }
   }
 
-  console.log(`NGIMAWA section has ${section.items.length} items`);
+  console.log(`OBULAMU section has ${section.items.length} items`);
   return section.items.length > 0 ? section : null;
 }
 
@@ -362,7 +375,8 @@ function findItemsInSection(doc, sectionHeader, stopAtHeaders) {
 // Helper function to find duration information for an item
 function findDurationForItem(element) {
   // First, check if the duration is within the element itself (common for <p> elements)
-  const elementDurationMatch = element.textContent.match(/\(Dak\.\s*\d+\)/);
+  // Luganda uses "Ddak." (Dakiika = minutes)
+  const elementDurationMatch = element.textContent.match(/\(Ddak\.\s*\d+\)/);
   if (elementDurationMatch) {
     return elementDurationMatch[0];
   }
@@ -373,7 +387,8 @@ function findDurationForItem(element) {
   while (nextElement) {
     if (nextElement.tagName === 'DIV') {
       // Look for duration pattern in this div and its children
-      const durationMatch = nextElement.textContent.match(/\(Dak\.\s*\d+\)/);
+      // Luganda uses "Ddak." (Dakiika = minutes)
+      const durationMatch = nextElement.textContent.match(/\(Ddak\.\s*\d+\)/);
       if (durationMatch) {
         return durationMatch[0];
       }
@@ -381,7 +396,8 @@ function findDurationForItem(element) {
       // Also check nested p elements
       const pElements = nextElement.querySelectorAll('p');
       for (const p of pElements) {
-        const pDurationMatch = p.textContent.match(/\(Dak\.\s*\d+\)/);
+        // Luganda uses "Ddak." (Dakiika = minutes)
+        const pDurationMatch = p.textContent.match(/\(Ddak\.\s*\d+\)/);
         if (pDurationMatch) {
           return pDurationMatch[0];
         }
@@ -415,22 +431,23 @@ function extractSongs(doc) {
     const h3 = h3Elements[i];
     const text = h3.textContent.trim();
     
-    // Look for "Wer" (song) pattern
-    const songMatch = text.match(/Wer\s+(\d+)/);
+    // Look for "Oluyimba" (Luganda for "Song") pattern
+    const songMatch = text.match(/Oluyimba\s+(\d+)/i);
     if (songMatch) {
       const songNumber = songMatch[1];
       
       // Determine which song this is based on context and position
-      if (text.includes('Weche Mitiekogo')) {
+      // Luganda: "Okufundikira" = closing/concluding comments, "Okusaba" = prayer, "Ennyanjula" = introduction
+      if (text.includes('Okufundikira')) {
         // Closing song (contains concluding comments)
         songs.closing = songNumber;
-      } else if (text.includes('Weche Michakogo') || (i < 3 && text.includes('kod Lamo'))) {
-        // Opening song (contains opening prayer context or early in document)
+      } else if (text.includes('Okusaba') || text.includes('Ennyanjula')) {
+        // Opening song (contains prayer or introduction context)
         if (!songs.opening) {
           songs.opening = songNumber;
         }
       } else {
-        // Middle song (usually standalone Wer reference, not opening or closing)
+        // Middle song (usually standalone song reference, not opening or closing)
         if (!songs.middle && !songs.opening) {
           // If we haven't found opening yet, this might be opening
           songs.opening = songNumber;
@@ -440,7 +457,7 @@ function extractSongs(doc) {
         }
       }
       
-      console.log(`Found song: Wer ${songNumber} in context: "${text.substring(0, 50)}..."`);
+      console.log(`Found song: ${songNumber} in context: "${text.substring(0, 50)}..."`);
     }
   }
 
