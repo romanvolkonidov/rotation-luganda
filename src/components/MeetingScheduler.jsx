@@ -91,15 +91,14 @@ useEffect(() => {
         setParticipantLists({
           chairmen: { name: 'Abakulembeze (Chairmen)', participants: [] },
           prayers: { name: 'Okusaba (Prayers)', participants: [] },
-          readers: { name: 'Abasomi ba Pulaani (Readers)', participants: [] },
+          puonjruokReaders: { name: 'Abasomi ba Okusoma kwa Bayibuli (Bible Study Readers)', participants: [] },
           assignment1: { name: 'Okusoma 1 (Assignment 1)', participants: [] },
           assignment2: { name: 'Okusoma 2 (Assignment 2)', participants: [] },
           assignment3: { name: 'Okusoma 3 (Assignment 3)', participants: [] },
-          assignment4: { name: 'Okusoma 4 (Assignment 4)', participants: [] },
           sisters: { name: 'Bannyanyaze (Sisters)', participants: [] },
-          ngimawa: { name: 'Obulamu - Bakadde (Elders)', participants: [] },
-          twak: { name: 'Okuvvuunuka (Concluding Comments)', participants: [] },
-          puonjruokMuma: { name: 'Okusoma kw\'Okujjukira (Memorial Readers)', participants: [] }
+          ngimawa: { name: 'Obulamu bwa Mukristaayo (Living as Christians)', participants: [] },
+          twak: { name: 'Okwogera kwa Ddakiika 5 (5 min talk)', participants: [] },
+          puonjruokMuma: { name: 'Okusoma kwa Bayibuli (Bible Study)', participants: [] }
         });
         
         // Show info message to user
@@ -118,15 +117,14 @@ useEffect(() => {
       setParticipantLists({
         chairmen: { name: 'Abakulembeze (Chairmen)', participants: [] },
         prayers: { name: 'Okusaba (Prayers)', participants: [] },
-        readers: { name: 'Abasomi ba Pulaani (Readers)', participants: [] },
+        puonjruokReaders: { name: 'Abasomi ba Okusoma kwa Bayibuli (Bible Study Readers)', participants: [] },
         assignment1: { name: 'Okusoma 1 (Assignment 1)', participants: [] },
         assignment2: { name: 'Okusoma 2 (Assignment 2)', participants: [] },
         assignment3: { name: 'Okusoma 3 (Assignment 3)', participants: [] },
-        assignment4: { name: 'Okusoma 4 (Assignment 4)', participants: [] },
         sisters: { name: 'Bannyanyaze (Sisters)', participants: [] },
-        ngimawa: { name: 'Obulamu - Bakadde (Elders)', participants: [] },
-        twak: { name: 'Okuvvuunuka (Concluding Comments)', participants: [] },
-        puonjruokMuma: { name: 'Okusoma kw\'Okujjukira (Memorial Readers)', participants: [] }
+        ngimawa: { name: 'Obulamu bwa Mukristaayo (Living as Christians)', participants: [] },
+        twak: { name: 'Okwogera kwa Ddakiika 5 (5 min talk)', participants: [] },
+        puonjruokMuma: { name: 'Okusoma kwa Bayibuli (Bible Study)', participants: [] }
       });
       
       // Show Firebase connection error
