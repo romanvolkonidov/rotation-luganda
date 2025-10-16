@@ -35,6 +35,10 @@ const MeetingScheduler = ({ userToken }) => {
   const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
   const [pendingHistoryLoad, setPendingHistoryLoad] = useState(null);
   
+  // Tutorial state
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  
   // Modal states
   const [alertModal, setAlertModal] = useState({ isOpen: false, title: '', message: '', type: 'info' });
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null, type: 'warning' });
@@ -107,6 +111,15 @@ useEffect(() => {
             'Starting fresh! Add participants to begin creating schedules.',
             'info'
           );
+          
+          // Show tutorial on first load for new users
+          const hasSeenTutorial = localStorage.getItem('hasSeenTutorial');
+          if (!hasSeenTutorial) {
+            setTimeout(() => {
+              setShowTutorial(true);
+              setTutorialStep(0);
+            }, 1500);
+          }
         }, 1000);
       }
     } catch (error) {
@@ -398,6 +411,54 @@ const performRotation = () => {
 
   console.log('✅ All participant data loaded from Firebase - proceeding with auto-assign');
 
+  // Check for "Apply Yourself" assignments that might need brother assignments (5 min talk)
+  let applyYourselfWarnings = [];
+  weeks.forEach((week, weekIndex) => {
+    week.sections.forEach(section => {
+      if (section.type === 'tiegri') { // BUULIRA N'OBUNYIIKIVU section
+        section.items.forEach((item, itemIndex) => {
+          // Check if this is an "Apply Yourself" type assignment
+          const isApplyYourself = item.description && 
+            (item.description.toLowerCase().includes('apply yourself') || 
+             item.description.toLowerCase().includes('weekiriza') ||
+             item.description.toLowerCase().includes('kolamu'));
+          
+          if (isApplyYourself && item.participantList === 'sisters') {
+            applyYourselfWarnings.push(
+              `Week ${weekIndex + 1}, Item ${itemIndex + 1}: "${item.description}" is assigned to Sisters list but might need brothers (5 min talk)`
+            );
+          }
+        });
+      }
+    });
+  });
+
+  // If there are Apply Yourself warnings, show them before proceeding
+  if (applyYourselfWarnings.length > 0) {
+    const warningMessage = 
+      'Found "Apply Yourself" assignments using Sisters list. These might need brothers instead (5 min talk):\n\n' +
+      applyYourselfWarnings.join('\n\n') +
+      '\n\nPlease check the dropdown for these assignments and select "Okwogera kwa Ddakiika 5 (5 min talk)" if needed, then try auto-assign again.\n\nDo you want to proceed anyway?';
+    
+    showConfirm(
+      warningMessage,
+      (confirmed) => {
+        if (confirmed) {
+          proceedWithAutoAssign();
+        }
+      },
+      'Check Apply Yourself Assignments',
+      'warning'
+    );
+    return;
+  }
+
+  // No warnings, proceed directly
+  proceedWithAutoAssign();
+};
+
+// Extracted the confirmation and execution logic
+const proceedWithAutoAssign = () => {
   // Always allow auto-assign - it will replace existing assignments with new ones
   showConfirm(
     'Auto-assign will assign participants to all roles based on fair rotation. Any existing assignments will be replaced. Do you want to continue?',
@@ -3678,49 +3739,163 @@ const printSlips = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-4">
-      {/* Help Sticker - Fixed position, compact, scrollable */}
-      <div className="fixed bottom-4 right-4 w-72 bg-blue-50 border-2 border-blue-300 rounded-lg shadow-lg z-50 no-print">
-        <div className="bg-blue-500 text-white px-3 py-2 rounded-t-lg font-semibold text-sm flex items-center gap-2">
-          <span>ℹ️</span>
-          <span>Quick Guide</span>
+      {/* Interactive Tutorial Overlay */}
+      {showTutorial && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 no-print">
+          {/* Tutorial Steps */}
+          {tutorialStep === 0 && (
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-2xl p-6 max-w-md">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">👋 Welcome!</h2>
+              <p className="text-gray-600 mb-6">
+                Let's take a quick tour of the Meeting Schedule Manager. This will show you how to create and manage schedules easily.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => { 
+                    setShowTutorial(false); 
+                    localStorage.setItem('hasSeenTutorial', 'true'); 
+                  }}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  Skip Tutorial
+                </button>
+                <button
+                  onClick={() => setTutorialStep(1)}
+                  className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  Start Tour
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {/* Step 1: Participant Lists */}
+          {tutorialStep === 1 && (
+            <>
+              <div className="absolute top-80 left-8 bg-white rounded-lg shadow-2xl p-5 max-w-sm animate-pulse-border">
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">1</div>
+                  <div>
+                    <h3 className="font-bold text-gray-800 mb-2">Add Participants</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Click on any participant list below, then click the <strong>+</strong> button to add names. Add everyone who will be assigned tasks.
+                    </p>
+                    <div className="flex gap-2 justify-end">
+                      <button onClick={() => setShowTutorial(false)} className="text-sm text-gray-500 hover:text-gray-700">Skip</button>
+                      <button onClick={() => setTutorialStep(2)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">Next →</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+          
+          {/* Step 2: Import EPUB */}
+          {tutorialStep === 2 && (
+            <div 
+              className="absolute bg-white rounded-lg shadow-2xl p-5 max-w-sm animate-pulse-border"
+              style={{ top: '120px', right: '320px' }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">2</div>
+                <div>
+                  <h3 className="font-bold text-gray-800 mb-2">Import EPUB File</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Click this button to upload a Luganda workbook (mwb_LU_*.epub). The app will automatically create weeks with songs and assignments.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={() => setTutorialStep(1)} className="text-sm text-gray-500 hover:text-gray-700">← Back</button>
+                    <button onClick={() => setTutorialStep(3)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">Next →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Step 3: Auto Assign */}
+          {tutorialStep === 3 && (
+            <div 
+              className="absolute bg-white rounded-lg shadow-2xl p-5 max-w-sm animate-pulse-border"
+              style={{ top: '120px', right: '20px' }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">3</div>
+                <div>
+                  <h3 className="font-bold text-gray-800 mb-2">Auto Assign</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Click here to automatically assign all participants fairly. The app uses smart rotation to ensure everyone gets equal opportunities and sister pairs never repeat.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={() => setTutorialStep(2)} className="text-sm text-gray-500 hover:text-gray-700">← Back</button>
+                    <button onClick={() => setTutorialStep(4)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">Next →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Step 4: Save */}
+          {tutorialStep === 4 && (
+            <div 
+              className="absolute bg-white rounded-lg shadow-2xl p-5 max-w-sm animate-pulse-border"
+              style={{ top: '180px', right: '20px' }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">4</div>
+                <div>
+                  <h3 className="font-bold text-gray-800 mb-2">Save Schedule</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Save your schedule here. The app tracks history to ensure fair rotation in future months and prevents repeating sister partnerships.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={() => setTutorialStep(3)} className="text-sm text-gray-500 hover:text-gray-700">← Back</button>
+                    <button onClick={() => setTutorialStep(5)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">Next →</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Step 5: History */}
+          {tutorialStep === 5 && (
+            <div 
+              className="absolute bg-white rounded-lg shadow-2xl p-5 max-w-sm animate-pulse-border"
+              style={{ top: '120px', right: '180px' }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">5</div>
+                <div>
+                  <h3 className="font-bold text-gray-800 mb-2">View History</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Access all your saved schedules here. You can view, edit, or load previous schedules. Past schedules help the app ensure fair assignments.
+                  </p>
+                  <div className="flex gap-2 justify-end">
+                    <button onClick={() => setTutorialStep(4)} className="text-sm text-gray-500 hover:text-gray-700">← Back</button>
+                    <button onClick={() => { 
+                      setShowTutorial(false); 
+                      setTutorialStep(0); 
+                      localStorage.setItem('hasSeenTutorial', 'true');
+                    }} className="px-4 py-2 bg-green-500 text-white rounded text-sm hover:bg-green-600">✓ Got it!</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="p-3 max-h-64 overflow-y-auto text-xs space-y-2">
-          <div>
-            <strong className="text-blue-700">1. Add Participants</strong>
-            <p className="text-gray-600">Click on each list below, then click <strong>+</strong> to add names</p>
-          </div>
-          <div>
-            <strong className="text-blue-700">2. Import EPUB</strong>
-            <p className="text-gray-600">Click <strong>"Import PDF/EPUB"</strong> and select a Luganda workbook file (mwb_LU_*.epub)</p>
-          </div>
-          <div>
-            <strong className="text-blue-700">3. Auto-Assign</strong>
-            <p className="text-gray-600">Click <strong>"Auto Assign"</strong> to automatically assign everyone fairly with rotation</p>
-          </div>
-          <div>
-            <strong className="text-blue-700">4. Manual Edit</strong>
-            <p className="text-gray-600">Click any assignment to change names manually if needed</p>
-          </div>
-          <div>
-            <strong className="text-blue-700">5. Save Schedule</strong>
-            <p className="text-gray-600">Click <strong>"Save Schedule"</strong> to store it. This helps the app track history for fair rotation in future months</p>
-          </div>
-          <div>
-            <strong className="text-blue-700">6. History</strong>
-            <p className="text-gray-600">Click <strong>"History"</strong> to view, edit, or load previous schedules. Past schedules help ensure fair assignments</p>
-          </div>
-          <div>
-            <strong className="text-blue-700">7. Preview/Print</strong>
-            <p className="text-gray-600">Use <strong>"Preview"</strong> to see final version or <strong>"Slips"</strong> to print assignment cards</p>
-          </div>
-          <div className="pt-2 border-t border-blue-200 text-blue-600 font-semibold">
-            💡 Tip: The app automatically prevents sister pairs from repeating!
-          </div>
-        </div>
-      </div>
+      )}
 
       <div className="mb-6 flex justify-between items-center no-print">
-        <h1 className="text-3xl font-bold text-gray-800">Meeting Schedule Manager</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-gray-800">Meeting Schedule Manager</h1>
+          <button
+            onClick={() => { setShowTutorial(true); setTutorialStep(0); }}
+            className="px-3 py-1.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 flex items-center gap-1.5 text-sm font-medium"
+            title="Show tutorial"
+          >
+            <span className="text-lg">?</span>
+            Help
+          </button>
+        </div>
         {/* Enhanced button group with New Schedule and History */}
         <div className="flex gap-2">
           <button
